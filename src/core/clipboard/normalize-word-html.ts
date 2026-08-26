@@ -1,7 +1,20 @@
-function replaceTag(element: Element, tagName: 'strong' | 'em'): void {
+function replaceTag(element: Element, tagName: 'strong' | 'em'): HTMLElement {
   const replacement = document.createElement(tagName)
   for (const child of [...element.childNodes]) replacement.appendChild(child)
   element.replaceWith(replacement)
+  return replacement
+}
+
+function normalizeSpanEmphasis(span: HTMLElement): void {
+  const style = span.getAttribute('style') ?? ''
+  const isBold = /(?:^|;)\s*font-weight\s*:\s*(?:bold|[6-9]00)\b/i.test(style)
+  const isItalic = /(?:^|;)\s*font-style\s*:\s*italic\b/i.test(style)
+
+  if (!isBold && !isItalic) return
+
+  let replacement: HTMLElement = span
+  if (isBold) replacement = replaceTag(replacement, 'strong')
+  if (isItalic) replacement = replaceTag(replacement, 'em')
 }
 
 export function normalizeWordHtml(input: string): { html: string; notices: string[] } {
@@ -17,6 +30,7 @@ export function normalizeWordHtml(input: string): { html: string; notices: strin
 
   template.content.querySelectorAll('b').forEach((node) => replaceTag(node, 'strong'))
   template.content.querySelectorAll('i').forEach((node) => replaceTag(node, 'em'))
+  template.content.querySelectorAll<HTMLElement>('span').forEach(normalizeSpanEmphasis)
 
   template.content.querySelectorAll<HTMLElement>('*').forEach((element) => {
     for (const attribute of [...element.attributes]) {
@@ -38,7 +52,8 @@ export function normalizeWordHtml(input: string): { html: string; notices: strin
         .split(';')
         .map((part) => part.trim())
         .filter(Boolean)
-        .filter((part) => !/^(font-family|font-size|mso-|margin(?:-left|-right)?|line-height)\s*:/i.test(part))
+        .filter((part) => !/^(font-family|font-size|font-style|mso-|margin(?:-[a-z-]+)?|line-height)\s*:/i.test(part))
+        .filter((part) => !/^font-weight\s*:/i.test(part))
       if (kept.length) element.setAttribute('style', kept.join('; '))
       else element.removeAttribute('style')
     }

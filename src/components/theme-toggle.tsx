@@ -1,35 +1,41 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
+import { Monitor, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
-
-const options = [
-  { value: 'system', label: 'Sistema' },
-  { value: 'light', label: 'Claro' },
-  { value: 'dark', label: 'Escuro' },
-] as const
-
-const subscribe = () => () => undefined
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-  const mounted = useSyncExternalStore(subscribe, () => true, () => false)
+  const { setTheme } = useTheme()
 
   return (
-    <label className="theme-control">
-      <span className="sr-only">Tema da interface</span>
-      <select
-        aria-label="Tema da interface"
-        value={mounted ? theme ?? 'system' : 'system'}
-        onChange={(event) => setTheme(event.target.value)}
-        disabled={!mounted}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon" aria-label="Alterar tema" title="Alterar tema">
+          <Sun data-icon="inline-start" className="scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+          <Moon data-icon="inline-start" className="absolute scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+          <span className="sr-only">Alterar tema</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" aria-label="Tema da interface">
+        <DropdownMenuItem onSelect={() => setTheme('light')}>
+          <Sun data-icon="inline-start" />
+          Claro
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setTheme('dark')}>
+          <Moon data-icon="inline-start" />
+          Escuro
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setTheme('system')}>
+          <Monitor data-icon="inline-start" />
+          Sistema
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

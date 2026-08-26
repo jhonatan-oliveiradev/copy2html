@@ -54,11 +54,17 @@ export const presetSchema = z.discriminatedUnion('type', [
   snippetPresetSchema,
 ])
 
+export const previewThemeSchema = z.object({
+  fontFamily: z.string().min(1),
+  fontStylesheetUrl: z.url().refine((value) => value.startsWith('https://'), 'Preview font stylesheet must use HTTPS').optional(),
+})
+
 export const presetPackSchema = z.object({
   id: z.string().min(1).regex(/^[a-z0-9-]+$/),
   name: z.string().min(1),
   description: z.string().optional(),
   isDefault: z.boolean().default(false),
+  previewTheme: previewThemeSchema.optional(),
   presets: z.array(presetSchema),
 })
 
@@ -68,4 +74,5 @@ export type InsertionPreset = z.output<typeof insertionPresetSchema>
 export type SnippetPreset = z.output<typeof snippetPresetSchema>
 export type Preset = z.output<typeof presetSchema>
 export type PresetInput = z.input<typeof presetSchema>
+export type PreviewTheme = z.output<typeof previewThemeSchema>
 export type PresetPack = z.output<typeof presetPackSchema>

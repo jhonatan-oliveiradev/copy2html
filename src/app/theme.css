@@ -1,0 +1,137 @@
+.dark {
+  color-scheme: dark;
+  --bg: #0d0d10;
+  --surface: #151519;
+  --surface-subtle: #1a1a1f;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --border: #29292f;
+  --border-strong: #3a3a42;
+  --accent: #8b7cf6;
+  --accent-dark: #a99efb;
+  --accent-soft: #28233f;
+  --success: #74d6a8;
+  --success-soft: #173326;
+  --warning: #e8bd62;
+  --warning-soft: #392d16;
+  --danger: #f18b83;
+  --danger-soft: #3b1d1a;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 12px 34px rgba(0, 0, 0, 0.32);
+}
+
+.dark .app-header {
+  background: rgba(21, 21, 25, 0.94);
+}
+
+.dark .version-badge {
+  color: var(--muted);
+  background: #232329;
+}
+
+.dark .pack-badge {
+  color: #cabffd;
+  background: #2b2440;
+}
+
+.dark .flow-hint {
+  background: #121216;
+}
+
+.dark .flow-hint b {
+  color: #707079;
+}
+
+.dark .toolbar button {
+  color: #c5c5cc;
+}
+
+.dark .toolbar button:hover:not(:disabled) {
+  background: #25252b;
+}
+
+.dark .copy-editor .ProseMirror {
+  color: #dedee3;
+}
+
+.dark .copy-editor .ProseMirror:empty::before,
+.dark .copy-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: #707079;
+}
+
+.dark .field-label {
+  color: #b9b9c1;
+}
+
+.dark .preset-group h3 {
+  color: #92929c;
+}
+
+.dark .preset-button {
+  background: #19191e;
+  color: #dedee3;
+}
+
+.dark .preset-button:hover {
+  border-color: #5b4ca5;
+  background: #211d31;
+  color: #c9c0ff;
+}
+
+.dark .secondary-button:hover {
+  background: #342d50;
+}
+
+.dark .ghost-button {
+  color: var(--muted);
+  background: #232329;
+}
+
+.dark .status-sanitized {
+  color: #f0cf7a;
+  background: #3a301b;
+}
+
+.dark .theme-control select {
+  background: #1b1b20;
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.theme-control {
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-control select {
+  min-height: 38px;
+  padding: 0 30px 0 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .app-header .header-actions > .copy-button {
+    display: none;
+  }
+
+  .theme-control select {
+    min-height: 36px;
+    max-width: 112px;
+  }
+
+  .dark .mobile-copy-action {
+    background: rgba(21, 21, 25, 0.96);
+  }
+}

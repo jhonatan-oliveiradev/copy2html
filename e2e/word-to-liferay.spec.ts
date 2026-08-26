@@ -96,6 +96,10 @@ test('publishes Word copy as clean Liferay HTML with Smiles presets', async ({ p
   await selectText(editor, 'Assine agora')
   await page.getByRole('button', { name: /^Macro Clube Smiles$/ }).click()
   await expect(output).toContainText('#p_p_id_smilesmembershipclubjoinmacro_WAR_smilesmembershipsportlet_')
+  await expect(output).not.toContainText('noopener')
+  await expect(output).not.toContainText('noreferrer')
+  await expect(output).not.toContainText('nofollow')
+  await expect(output).not.toContainText('_blank')
 
   await expect(page.getByTitle('Preview do HTML sanitizado')).toBeVisible()
   await expect(page.locator('.status-blocked')).toHaveCount(0)
@@ -106,5 +110,6 @@ test('publishes Word copy as clean Liferay HTML with Smiles presets', async ({ p
   expect(copied).toContain('<strong>superbônus</strong>')
   expect(copied).toContain('color: #663399')
   expect(copied).toContain('#p_p_id_smilesmembershipclubjoinmacro_WAR_smilesmembershipsportlet_')
+  expect(copied).not.toMatch(/noopener|noreferrer|nofollow|_blank/i)
   expect(copied).not.toMatch(/MsoNormal|Calibri|font-family/i)
 })

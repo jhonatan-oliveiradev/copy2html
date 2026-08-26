@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
 import { listPresetPacks } from '@/core/presets/registry'
+import type { FormattingPreset } from '@/core/presets/schemas'
 import { PresetPanel } from './preset-panel'
+
+const noopImport = async () => undefined
 
 describe('PresetPanel', () => {
   it('shows Smiles as the active default pack with categorized presets', () => {
@@ -15,6 +18,8 @@ describe('PresetPanel', () => {
         onPackChange={() => undefined}
         onPackEnabledChange={() => undefined}
         onCreateCustomPreset={() => undefined}
+        onImportPresets={noopImport}
+        onExportPresets={() => undefined}
         onNotice={() => undefined}
       />,
     )
@@ -37,6 +42,8 @@ describe('PresetPanel', () => {
         onPackChange={() => undefined}
         onPackEnabledChange={() => undefined}
         onCreateCustomPreset={() => undefined}
+        onImportPresets={noopImport}
+        onExportPresets={() => undefined}
         onNotice={() => undefined}
       />,
     )
@@ -46,9 +53,37 @@ describe('PresetPanel', () => {
     expect(screen.queryByRole('button', { name: /^Clube Smiles$/ })).not.toBeInTheDocument()
   })
 
-  it('requires confirmation before inserting historical snippets', () => {
+  it('shows imported personal presets in their own section', () => {
+    const personalPreset: FormattingPreset = {
+      id: 'custom-destaque',
+      label: 'Destaque compartilhado',
+      type: 'formatting',
+      reviewBeforeUse: false,
+      template: '<strong>{{selection}}</strong>',
+    }
+
+    render(
+      <PresetPanel
+        packs={listPresetPacks()}
+        activePackId="smiles"
+        packEnabled
+        customPresets={[personalPreset]}
+        actions={null}
+        onPackChange={() => undefined}
+        onPackEnabledChange={() => undefined}
+        onCreateCustomPreset={() => undefined}
+        onImportPresets={noopImport}
+        onExportPresets={() => undefined}
+        onNotice={() => undefined}
+      />,
+    )
+
+    expect(screen.getByText('Presets pessoais (1)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Destaque compartilhado/ })).toBeInTheDocument()
+  })
+
+  it('requires shadcn confirmation before inserting historical snippets', () => {
     const insertSnippet = vi.fn().mockReturnValue(true)
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
 
     render(
       <PresetPanel
@@ -65,12 +100,18 @@ describe('PresetPanel', () => {
         onPackChange={() => undefined}
         onPackEnabledChange={() => undefined}
         onCreateCustomPreset={() => undefined}
+        onImportPresets={noopImport}
+        onExportPresets={() => undefined}
         onNotice={() => undefined}
       />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: /Tarja de vigência/ }))
-    expect(window.confirm).toHaveBeenCalled()
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(screen.getByText('Revisar preset antes de inserir')).toBeInTheDocument()
     expect(insertSnippet).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Inserir preset' }))
+    expect(insertSnippet).toHaveBeenCalledTimes(1)
   })
 })

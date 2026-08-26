@@ -123,7 +123,7 @@ export function Copy2HtmlWorkspace() {
     setExportName(activePack?.name ? `${activePack.name} — presets pessoais` : 'Presets pessoais do Copy2HTML')
     setExportAuthor('')
     setExportDialogOpen(true)
-  }, [activePack?.name, customPresets.length, showNotice])
+  }, [activePack, customPresets.length, showNotice])
 
   const exportCustomPresets = useCallback(() => {
     const name = exportName.trim()
@@ -152,7 +152,7 @@ export function Copy2HtmlWorkspace() {
     } catch {
       showNotice('Não foi possível exportar os presets pessoais.')
     }
-  }, [activePack?.name, customPresets, exportAuthor, exportName, showNotice])
+  }, [activePack, customPresets, exportAuthor, exportName, showNotice])
 
   const applyImportedPack = useCallback(
     (pack: PortablePresetPack, strategy: ImportConflictStrategy) => {

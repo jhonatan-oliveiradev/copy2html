@@ -187,6 +187,33 @@
   height: 6px;
 }
 
+.personal-preset-group {
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--premium-accent) 16%, var(--premium-line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--premium-accent-soft) 30%, transparent);
+}
+
+.personal-preset-group h3 {
+  color: var(--premium-accent-strong);
+}
+
+.personal-preset-group .preset-button {
+  background: color-mix(in srgb, var(--premium-panel-solid) 62%, transparent);
+}
+
+.personal-preset-group .preset-button small {
+  background: var(--premium-panel-muted);
+  color: var(--premium-muted);
+}
+
+.preset-empty-copy {
+  margin: 4px 0 0;
+  color: var(--premium-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .secondary-button,
 .ghost-button,
 .primary-button {

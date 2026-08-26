@@ -1,6 +1,24 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type {
   FormattingPreset,
   InsertionPreset,
@@ -39,6 +57,10 @@ const sectionLabels: Record<Preset['type'], string> = {
   snippet: 'Snippets',
 }
 
+function matchesQuery(preset: Preset, query: string) {
+  return !query || `${preset.label} ${preset.description ?? ''}`.toLowerCase().includes(query)
+}
+
 export function PresetPanel({
   packs,
   activePackId,
@@ -53,27 +75,28 @@ export function PresetPanel({
   onNotice,
 }: PresetPanelProps) {
   const [query, setQuery] = useState('')
+  const [pendingReviewPreset, setPendingReviewPreset] = useState<Preset | null>(null)
   const importInputRef = useRef<HTMLInputElement>(null)
   const basePack = packs.find((pack) => pack.id === 'base')
   const activePack = packs.find((pack) => pack.id === activePackId)
+  const normalizedQuery = query.trim().toLowerCase()
 
-  const presets = useMemo(() => {
+  const officialPresets = useMemo(() => {
     const all = [
       ...(basePack?.presets ?? []),
       ...(packEnabled && activePack && activePack.id !== 'base' ? activePack.presets : []),
-      ...customPresets,
     ]
-    const normalizedQuery = query.trim().toLowerCase()
-    return normalizedQuery ? all.filter((preset) => `${preset.label} ${preset.description ?? ''}`.toLowerCase().includes(normalizedQuery)) : all
-  }, [activePack, basePack, customPresets, packEnabled, query])
+    return all.filter((preset) => matchesQuery(preset, normalizedQuery))
+  }, [activePack, basePack, normalizedQuery, packEnabled])
 
-  function runPreset(preset: Preset) {
+  const visibleCustomPresets = useMemo(
+    () => customPresets.filter((preset) => matchesQuery(preset, normalizedQuery)),
+    [customPresets, normalizedQuery],
+  )
+
+  function executePreset(preset: Preset) {
     if (!actions) {
       onNotice('O editor ainda está inicializando.')
-      return
-    }
-
-    if (preset.reviewBeforeUse && !window.confirm('Este snippet é histórico e precisa ser revisado antes de publicar. Inserir mesmo assim?')) {
       return
     }
 
@@ -89,6 +112,14 @@ export function PresetPanel({
     if (!applied) onNotice('Selecione um trecho compatível no editor ou posicione o cursor antes de aplicar este preset.')
   }
 
+  function runPreset(preset: Preset) {
+    if (preset.reviewBeforeUse) {
+      setPendingReviewPreset(preset)
+      return
+    }
+    executePreset(preset)
+  }
+
   async function handleImportFile(file: File | undefined) {
     if (!file) return
     await onImportPresets(file)
@@ -96,72 +127,117 @@ export function PresetPanel({
   }
 
   return (
-    <aside className="preset-panel" aria-label="Presets">
-      <div className="panel-heading-row">
-        <div>
-          <span className="eyebrow">Preset pack</span>
-          <h2>{activePack?.name ?? 'Base'}</h2>
+    <>
+      <aside className="preset-panel" aria-label="Presets">
+        <div className="panel-heading-row">
+          <div>
+            <span className="eyebrow">Preset pack</span>
+            <h2>{activePack?.name ?? 'Base'}</h2>
+          </div>
+          {activePack?.id === 'smiles' ? <span className="pack-badge">Ativo por padrão</span> : null}
         </div>
-        {activePack?.id === 'smiles' ? <span className="pack-badge">Ativo por padrão</span> : null}
-      </div>
 
-      <label className="field-label">
-        Pack ativo
-        <select value={activePackId} onChange={(event) => onPackChange(event.target.value)}>
-          {packs.filter((pack) => pack.id !== 'base').map((pack) => (
-            <option key={pack.id} value={pack.id}>{pack.name}</option>
-          ))}
-        </select>
-      </label>
-
-      <label className="toggle-row">
-        <input type="checkbox" checked={packEnabled} onChange={(event) => onPackEnabledChange(event.target.checked)} />
-        Usar presets do pack {activePack?.name}
-      </label>
-
-      <label className="field-label">
-        Buscar preset
-        <input type="search" placeholder="Ex.: Clube, quebra, macro..." value={query} onChange={(event) => setQuery(event.target.value)} />
-      </label>
-
-      <section className="preset-group" aria-labelledby="preset-share-title">
-        <h3 id="preset-share-title">Compartilhar presets pessoais</h3>
-        <div className="inline-actions">
-          <button type="button" className="secondary-button" onClick={() => importInputRef.current?.click()}>
-            Importar
-          </button>
-          <button type="button" className="ghost-button" disabled={customPresets.length === 0} onClick={onExportPresets}>
-            Exportar {customPresets.length > 0 ? `(${customPresets.length})` : ''}
-          </button>
-          <input
-            ref={importInputRef}
-            type="file"
-            hidden
-            accept=".json,.copy2html.json,application/json"
-            onChange={(event) => void handleImportFile(event.target.files?.[0])}
-          />
+        <div className="field-label">
+          <span>Pack ativo</span>
+          <Select value={activePackId} onValueChange={onPackChange}>
+            <SelectTrigger aria-label="Pack ativo">
+              <SelectValue placeholder="Selecione um pack" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {packs.filter((pack) => pack.id !== 'base').map((pack) => (
+                  <SelectItem key={pack.id} value={pack.id}>{pack.name}</SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
-      </section>
 
-      {(['formatting', 'link', 'insertion', 'snippet'] as const).map((type) => {
-        const items = presets.filter((preset) => preset.type === type)
-        if (!items.length) return null
-        return (
-          <section className="preset-group" key={type}>
-            <h3>{sectionLabels[type]}</h3>
+        <label className="toggle-row">
+          <input type="checkbox" checked={packEnabled} onChange={(event) => onPackEnabledChange(event.target.checked)} />
+          Usar presets do pack {activePack?.name}
+        </label>
+
+        <label className="field-label">
+          Buscar preset
+          <input type="search" placeholder="Ex.: Clube, quebra, macro..." value={query} onChange={(event) => setQuery(event.target.value)} />
+        </label>
+
+        <section className="preset-group" aria-labelledby="preset-share-title">
+          <h3 id="preset-share-title">Compartilhar presets pessoais</h3>
+          <div className="inline-actions">
+            <button type="button" className="secondary-button" onClick={() => importInputRef.current?.click()}>
+              Importar
+            </button>
+            <button type="button" className="ghost-button" disabled={customPresets.length === 0} onClick={onExportPresets}>
+              Exportar {customPresets.length > 0 ? `(${customPresets.length})` : ''}
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              hidden
+              accept=".json,.copy2html.json,application/json"
+              onChange={(event) => void handleImportFile(event.target.files?.[0])}
+            />
+          </div>
+        </section>
+
+        {customPresets.length > 0 ? (
+          <section className="preset-group personal-preset-group" aria-labelledby="personal-presets-title">
+            <h3 id="personal-presets-title">Presets pessoais ({customPresets.length})</h3>
             <div className="preset-list">
-              {items.map((preset) => (
+              {visibleCustomPresets.length > 0 ? visibleCustomPresets.map((preset) => (
                 <button type="button" className="preset-button" key={preset.id} onClick={() => runPreset(preset)}>
                   <span>{preset.label}</span>
-                  {preset.reviewBeforeUse ? <small>Revisar</small> : null}
+                  <small>{sectionLabels[preset.type]}</small>
                 </button>
-              ))}
+              )) : <p className="preset-empty-copy">Nenhum preset pessoal corresponde à busca.</p>}
             </div>
           </section>
-        )
-      })}
+        ) : null}
 
-      <CustomPresetForm onCreate={onCreateCustomPreset} onError={onNotice} />
-    </aside>
+        {(['formatting', 'link', 'insertion', 'snippet'] as const).map((type) => {
+          const items = officialPresets.filter((preset) => preset.type === type)
+          if (!items.length) return null
+          return (
+            <section className="preset-group" key={type}>
+              <h3>{sectionLabels[type]}</h3>
+              <div className="preset-list">
+                {items.map((preset) => (
+                  <button type="button" className="preset-button" key={preset.id} onClick={() => runPreset(preset)}>
+                    <span>{preset.label}</span>
+                    {preset.reviewBeforeUse ? <small>Revisar</small> : null}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )
+        })}
+
+        <CustomPresetForm onCreate={onCreateCustomPreset} onError={onNotice} />
+      </aside>
+
+      <AlertDialog open={pendingReviewPreset !== null} onOpenChange={(open) => !open && setPendingReviewPreset(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revisar preset antes de inserir</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este snippet é histórico e precisa ser revisado antes de publicar. Deseja inserir “{pendingReviewPreset?.label}” mesmo assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingReviewPreset(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingReviewPreset) executePreset(pendingReviewPreset)
+                setPendingReviewPreset(null)
+              }}
+            >
+              Inserir preset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

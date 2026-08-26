@@ -1,1 +1,0 @@
-Copy2HTML CI bootstrap marker. This file can be removed after the initial workflow gate is established.

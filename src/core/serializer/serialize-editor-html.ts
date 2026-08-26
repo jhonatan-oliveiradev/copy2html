@@ -26,6 +26,9 @@ function canonicalize(html: string): string {
     node.replaceWith(em)
   })
 
+  const hasVisibleText = Boolean(template.content.textContent?.replace(/\u00a0/g, ' ').trim())
+  if (!hasVisibleText) return ''
+
   return template.innerHTML
     .replaceAll('<br>', '<br />')
     .replace(/>\s+</g, '><')
@@ -38,7 +41,7 @@ export function serializeEditorHtml(editorHtml: string): SerializationResult {
   const sanitization: SanitizationResult = {
     ...firstPass,
     html,
-    changed: firstPass.changed || html !== editorHtml,
+    changed: firstPass.changed,
   }
 
   return {

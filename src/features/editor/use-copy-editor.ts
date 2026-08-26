@@ -80,7 +80,7 @@ export function useCopyEditor({ onSerializedChange, onNotice }: CopyEditorOption
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       StyledStrong,
       SmallMark,
       HtmlBlock,

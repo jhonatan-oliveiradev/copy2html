@@ -17,4 +17,21 @@ describe('HtmlPreview', () => {
     expect(frame.getAttribute('srcdoc')).toContain('<strong>sanitizado</strong>')
     expect(frame.getAttribute('srcdoc')).not.toContain('<p>original</p>')
   })
+
+  it('applies an optional pack preview font without modifying content HTML', () => {
+    render(
+      <HtmlPreview
+        result={result}
+        previewTheme={{
+          fontFamily: 'Nunito, Arial, sans-serif',
+          fontStylesheetUrl: 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap',
+        }}
+      />,
+    )
+
+    const srcDoc = screen.getByTitle('Preview do HTML sanitizado').getAttribute('srcdoc') ?? ''
+    expect(srcDoc).toContain('fonts.googleapis.com')
+    expect(srcDoc).toContain('font-family:Nunito, Arial, sans-serif')
+    expect(result.sanitization.html).toBe('<p><strong>sanitizado</strong></p>')
+  })
 })

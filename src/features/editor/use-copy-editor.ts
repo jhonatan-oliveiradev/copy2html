@@ -124,7 +124,12 @@ export function useCopyEditor({ onSerializedChange, onNotice }: CopyEditorOption
     (preset: LinkPreset) => {
       if (!editor) return false
       const { style } = inspectTemplate(preset.template)
-      return editor.chain().focus().extendMarkRange('link').setLink({ href: preset.href, style } as never).run()
+      const internalAnchor = preset.href.startsWith('#')
+      const attributes = internalAnchor
+        ? { href: preset.href, style, target: null, rel: null }
+        : { href: preset.href, style }
+
+      return editor.chain().focus().extendMarkRange('link').setLink(attributes as never).run()
     },
     [editor],
   )

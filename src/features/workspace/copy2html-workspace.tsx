@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ThemeToggle } from '@/components/theme-toggle'
 import type { FormattingPreset, InsertionPreset, LinkPreset, Preset, SnippetPreset } from '@/core/presets/schemas'
 import { getDefaultPresetPack, listPresetPacks } from '@/core/presets/registry'
 import { loadCustomPresets, saveCustomPresets } from '@/core/presets/storage'
@@ -72,7 +73,10 @@ export function Copy2HtmlWorkspace() {
           </div>
           <p>Do Word ao Liferay, com HTML limpo e previsível.</p>
         </div>
-        <CopyToLiferayButton result={result} onNotice={showNotice} />
+        <div className="header-actions">
+          <ThemeToggle />
+          <CopyToLiferayButton result={result} onNotice={showNotice} />
+        </div>
       </header>
 
       <div className="flow-hint" role="status" aria-live="polite">

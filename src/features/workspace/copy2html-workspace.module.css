@@ -1,3 +1,12 @@
+.primaryGrid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 292px;
+  gap: 18px;
+  align-items: start;
+  min-width: 0;
+}
+
 .presetRail {
   min-width: 0;
   height: min(600px, calc(100vh - 190px));
@@ -18,6 +27,10 @@
 }
 
 @media (max-width: 980px) {
+  .primaryGrid {
+    grid-template-columns: 1fr;
+  }
+
   .presetRail {
     height: auto;
     min-height: 0;

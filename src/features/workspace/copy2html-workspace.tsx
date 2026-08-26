@@ -3,11 +3,33 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   createPortablePresetPack,
   mergeImportedPresets,
   parsePortablePresetPack,
   portablePresetFilename,
   serializePortablePresetPack,
+  type ImportConflictStrategy,
+  type PortablePresetPack,
 } from '@/core/presets/portability'
 import type { FormattingPreset, InsertionPreset, LinkPreset, Preset, SnippetPreset } from '@/core/presets/schemas'
 import { getDefaultPresetPack, listPresetPacks } from '@/core/presets/registry'
@@ -33,6 +55,11 @@ type PresetActions = {
   insertSnippet: (preset: SnippetPreset) => boolean
 }
 
+type PendingImport = {
+  pack: PortablePresetPack
+  conflictCount: number
+}
+
 function GithubMark() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
@@ -53,6 +80,10 @@ export function Copy2HtmlWorkspace() {
   const [presetActions, setPresetActions] = useState<PresetActions | null>(null)
   const [result, setResult] = useState<SerializationResult>(emptyResult)
   const [notice, setNotice] = useState('Cole sua copy do Word no editor para começar.')
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [exportName, setExportName] = useState('')
+  const [exportAuthor, setExportAuthor] = useState('')
 
   const activePack = useMemo(() => packs.find((pack) => pack.id === activePackId), [activePackId, packs])
   const previewTheme = packEnabled ? activePack?.previewTheme : undefined
@@ -84,22 +115,27 @@ export function Copy2HtmlWorkspace() {
     [customPresets, showNotice],
   )
 
-  const exportCustomPresets = useCallback(() => {
+  const openExportDialog = useCallback(() => {
     if (!customPresets.length) {
       showNotice('Crie ao menos um preset pessoal antes de exportar.')
       return
     }
+    setExportName(activePack?.name ? `${activePack.name} — presets pessoais` : 'Presets pessoais do Copy2HTML')
+    setExportAuthor('')
+    setExportDialogOpen(true)
+  }, [activePack?.name, customPresets.length, showNotice])
 
-    const suggestedName = activePack?.name ? `${activePack.name} — presets pessoais` : 'Presets pessoais do Copy2HTML'
-    const name = window.prompt('Nome do pack que será compartilhado:', suggestedName)?.trim()
-    if (!name) return
-
-    const author = window.prompt('Autor do pack (opcional):', '')?.trim() || undefined
+  const exportCustomPresets = useCallback(() => {
+    const name = exportName.trim()
+    if (!name) {
+      showNotice('Informe um nome para o pack antes de exportar.')
+      return
+    }
 
     try {
       const pack = createPortablePresetPack(customPresets, {
         name,
-        author,
+        author: exportAuthor.trim() || undefined,
         description: activePack?.name ? `Presets pessoais criados no contexto do pack ${activePack.name}.` : undefined,
       })
       const blob = new Blob([serializePortablePresetPack(pack)], { type: 'application/json;charset=utf-8' })
@@ -111,11 +147,33 @@ export function Copy2HtmlWorkspace() {
       anchor.click()
       anchor.remove()
       URL.revokeObjectURL(url)
+      setExportDialogOpen(false)
       showNotice(`${customPresets.length} preset${customPresets.length === 1 ? '' : 's'} exportado${customPresets.length === 1 ? '' : 's'} com segurança.`)
     } catch {
       showNotice('Não foi possível exportar os presets pessoais.')
     }
-  }, [activePack?.name, customPresets, showNotice])
+  }, [activePack?.name, customPresets, exportAuthor, exportName, showNotice])
+
+  const applyImportedPack = useCallback(
+    (pack: PortablePresetPack, strategy: ImportConflictStrategy) => {
+      try {
+        const merged = mergeImportedPresets(customPresets, pack.presets, strategy, officialPresetIds)
+        const saved = saveCustomPresets(merged.presets)
+        setCustomPresets(saved.presets)
+
+        const details = [
+          `${merged.imported} importado${merged.imported === 1 ? '' : 's'}`,
+          merged.conflicts ? `${merged.conflicts} conflito${merged.conflicts === 1 ? '' : 's'}` : null,
+          merged.blockedOfficial ? `${merged.blockedOfficial} ID oficial ignorado${merged.blockedOfficial === 1 ? '' : 's'}` : null,
+        ].filter(Boolean).join(' · ')
+
+        showNotice(`${pack.name}: ${details}.${saved.persistent ? '' : ` ${saved.notice ?? ''}`}`)
+      } catch {
+        showNotice('Não foi possível salvar os presets importados.')
+      }
+    },
+    [customPresets, officialPresetIds, showNotice],
+  )
 
   const importCustomPresets = useCallback(
     async (file: File) => {
@@ -136,29 +194,14 @@ export function Copy2HtmlWorkspace() {
       }
 
       const conflictCount = parsed.data.presets.filter((preset) => customPresets.some((current) => current.id === preset.id)).length
-      const strategy = conflictCount > 0 && window.confirm(
-        `${conflictCount} preset${conflictCount === 1 ? '' : 's'} pessoal${conflictCount === 1 ? '' : 'is'} já existe${conflictCount === 1 ? '' : 'm'}.\n\nOK: substituir pelos presets importados.\nCancelar: manter os presets atuais e importar apenas os novos.`,
-      )
-        ? 'replace-existing'
-        : 'keep-existing'
-
-      try {
-        const merged = mergeImportedPresets(customPresets, parsed.data.presets, strategy, officialPresetIds)
-        const saved = saveCustomPresets(merged.presets)
-        setCustomPresets(saved.presets)
-
-        const details = [
-          `${merged.imported} importado${merged.imported === 1 ? '' : 's'}`,
-          merged.conflicts ? `${merged.conflicts} conflito${merged.conflicts === 1 ? '' : 's'}` : null,
-          merged.blockedOfficial ? `${merged.blockedOfficial} ID oficial ignorado${merged.blockedOfficial === 1 ? '' : 's'}` : null,
-        ].filter(Boolean).join(' · ')
-
-        showNotice(`${parsed.data.name}: ${details}.${saved.persistent ? '' : ` ${saved.notice ?? ''}`}`)
-      } catch {
-        showNotice('Não foi possível salvar os presets importados.')
+      if (conflictCount > 0) {
+        setPendingImport({ pack: parsed.data, conflictCount })
+        return
       }
+
+      applyImportedPack(parsed.data, 'keep-existing')
     },
-    [customPresets, officialPresetIds, showNotice],
+    [applyImportedPack, customPresets, showNotice],
   )
 
   return (
@@ -207,7 +250,7 @@ export function Copy2HtmlWorkspace() {
               onPackEnabledChange={setPackEnabled}
               onCreateCustomPreset={createCustomPreset}
               onImportPresets={importCustomPresets}
-              onExportPresets={exportCustomPresets}
+              onExportPresets={openExportDialog}
               onNotice={showNotice}
             />
           </aside>
@@ -235,6 +278,74 @@ export function Copy2HtmlWorkspace() {
       <div className="mobile-copy-action">
         <CopyToLiferayButton result={result} onNotice={showNotice} />
       </div>
+
+      <AlertDialog open={pendingImport !== null} onOpenChange={(open) => !open && setPendingImport(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Presets pessoais já existentes</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingImport?.conflictCount === 1
+                ? '1 preset pessoal já existe neste navegador.'
+                : `${pendingImport?.conflictCount ?? 0} presets pessoais já existem neste navegador.`}
+              {' '}Você pode manter os atuais e importar apenas os novos, ou substituir os conflitos pelos presets recebidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                if (pendingImport) applyImportedPack(pendingImport.pack, 'keep-existing')
+                setPendingImport(null)
+              }}
+            >
+              Manter atuais
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingImport) applyImportedPack(pendingImport.pack, 'replace-existing')
+                setPendingImport(null)
+              }}
+            >
+              Substituir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Exportar presets pessoais</DialogTitle>
+            <DialogDescription>
+              Gere um arquivo portátil para compartilhar seus presets com colegas ou usar em outro dispositivo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-5 flex flex-col gap-4">
+            <label className="flex flex-col gap-2 text-sm font-medium">
+              Nome do pack
+              <input
+                className="min-h-10 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-[var(--text)] outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent)_22%,transparent)]"
+                value={exportName}
+                onChange={(event) => setExportName(event.target.value)}
+                autoFocus
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium">
+              Autor <span className="font-normal text-[var(--muted)]">(opcional)</span>
+              <input
+                className="min-h-10 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-[var(--text)] outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent)_22%,transparent)]"
+                value={exportAuthor}
+                onChange={(event) => setExportAuthor(event.target.value)}
+              />
+            </label>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button onClick={exportCustomPresets} disabled={!exportName.trim()}>Exportar arquivo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

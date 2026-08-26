@@ -26,6 +26,37 @@
   scrollbar-gutter: stable;
 }
 
+.credit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 2px 20px 24px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.credit a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  font-weight: 550;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.credit a:hover {
+  color: var(--text);
+}
+
+.credit a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
 @media (max-width: 980px) {
   .primaryGrid {
     grid-template-columns: 1fr;
@@ -42,5 +73,9 @@
   .presetRail :global(.preset-panel) {
     height: auto;
     overflow: visible;
+  }
+
+  .credit {
+    padding-bottom: 84px;
   }
 }

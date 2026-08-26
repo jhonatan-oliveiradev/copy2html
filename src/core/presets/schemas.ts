@@ -52,9 +52,10 @@ export const presetPackSchema = z.object({
   presets: z.array(presetSchema),
 })
 
-export type FormattingPreset = z.infer<typeof formattingPresetSchema>
-export type LinkPreset = z.infer<typeof linkPresetSchema>
-export type InsertionPreset = z.infer<typeof insertionPresetSchema>
-export type SnippetPreset = z.infer<typeof snippetPresetSchema>
-export type Preset = z.infer<typeof presetSchema>
-export type PresetPack = z.infer<typeof presetPackSchema>
+export type FormattingPreset = z.output<typeof formattingPresetSchema>
+export type LinkPreset = z.output<typeof linkPresetSchema>
+export type InsertionPreset = z.output<typeof insertionPresetSchema>
+export type SnippetPreset = z.output<typeof snippetPresetSchema>
+export type Preset = z.output<typeof presetSchema>
+export type PresetInput = z.input<typeof presetSchema>
+export type PresetPack = z.output<typeof presetPackSchema>

@@ -1,6 +1,6 @@
-import type { Preset } from '@/core/presets/schemas'
+import type { PresetInput } from '@/core/presets/schemas'
 
-export const smilesPresets: Preset[] = [
+export const smilesPresets: PresetInput[] = [
   {
     id: 'clube-smiles',
     label: 'Clube Smiles',

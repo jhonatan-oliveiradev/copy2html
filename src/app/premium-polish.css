@@ -1,0 +1,268 @@
+:root {
+  --polish-panel-outline: color-mix(in srgb, var(--premium-line-strong) 72%, transparent);
+}
+
+/* Second-pass visual polish based on rendered desktop validation. */
+.app-header {
+  min-height: 82px;
+  padding-inline: clamp(28px, 4vw, 64px);
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.brand-row h1 {
+  font-size: 21px;
+  font-weight: 680;
+}
+
+.app-header > div > p {
+  font-size: 12.5px;
+}
+
+.copy-button {
+  min-height: 40px;
+  padding-inline: 18px;
+  font-size: 12.5px;
+}
+
+.flow-hint {
+  min-height: 40px;
+  padding-inline: clamp(28px, 4vw, 64px);
+  font-size: 11.5px;
+}
+
+.workspace {
+  width: min(1480px, calc(100% - 56px));
+  margin-top: 28px;
+  gap: 18px;
+}
+
+.editor-section,
+.preset-panel,
+.output-panel,
+.preview-panel {
+  border-color: var(--polish-panel-outline);
+  box-shadow: 0 1px 2px rgba(10, 12, 18, 0.04), 0 18px 50px rgba(10, 12, 18, 0.075);
+}
+
+.dark .editor-section,
+.dark .preset-panel,
+.dark .output-panel,
+.dark .preview-panel {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.32), 0 22px 56px rgba(0, 0, 0, 0.26);
+}
+
+.section-heading {
+  min-height: 80px;
+  padding: 20px 24px 18px;
+}
+
+.section-heading h2,
+.panel-heading-row h2,
+.preset-panel h2 {
+  font-size: 16.5px;
+  font-weight: 650;
+}
+
+.section-heading > p {
+  max-width: 560px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.eyebrow {
+  font-size: 9.5px;
+}
+
+.editor-shell {
+  min-height: 570px;
+}
+
+.toolbar {
+  min-height: 50px;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.toolbar button {
+  min-height: 34px;
+  gap: 7px;
+  padding-inline: 10px;
+  font-size: 11.5px;
+}
+
+.toolbar-icon {
+  min-width: 17px;
+  height: 17px;
+  font-size: 13.5px;
+}
+
+.copy-editor {
+  min-height: 520px;
+}
+
+.copy-editor .ProseMirror {
+  min-height: 520px;
+  padding: 44px 52px 88px;
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.copy-editor .ProseMirror p {
+  max-width: 880px;
+}
+
+.copy-editor .ProseMirror p.is-editor-empty:first-child::before,
+.copy-editor .ProseMirror:empty::before {
+  content: 'Cole sua copy do Word aqui…';
+  color: color-mix(in srgb, var(--premium-muted) 64%, transparent);
+  font-size: 15px;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+}
+
+.preset-panel {
+  padding: 18px;
+}
+
+.preset-panel .panel-heading-row {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+}
+
+.field-label {
+  gap: 7px;
+  margin: 14px 0;
+  font-size: 10.5px;
+}
+
+.field-label input,
+.field-label select,
+.custom-preset-form input {
+  min-height: 39px;
+  border-radius: 9px;
+  font-size: 11.5px;
+}
+
+.toggle-row {
+  font-size: 11.5px;
+}
+
+.preset-group {
+  margin-top: 20px;
+}
+
+.preset-group h3 {
+  margin-bottom: 8px;
+  font-size: 9.5px;
+}
+
+.preset-list {
+  gap: 5px;
+}
+
+.preset-button {
+  min-height: 40px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 560;
+}
+
+.preset-button:hover,
+.dark .preset-button:hover {
+  border-color: color-mix(in srgb, var(--premium-accent) 14%, var(--premium-line));
+  background: color-mix(in srgb, var(--premium-accent-soft) 56%, var(--premium-panel-muted));
+  transform: translateX(2px);
+}
+
+.preset-button::before {
+  width: 6px;
+  height: 6px;
+}
+
+.secondary-button,
+.ghost-button,
+.primary-button {
+  min-height: 37px;
+  font-size: 11.5px;
+}
+
+.result-grid {
+  gap: 18px;
+}
+
+.output-panel .panel-heading-row,
+.preview-panel .panel-heading-row {
+  min-height: 66px;
+  padding: 17px 20px;
+  align-items: center;
+}
+
+.status-badge {
+  min-height: 22px;
+  padding-inline: 8px;
+  font-size: 9.5px;
+}
+
+.html-code {
+  min-height: 330px;
+  max-height: 470px;
+  padding: 24px;
+  font-size: 12.5px;
+  line-height: 1.72;
+}
+
+.preview-frame {
+  min-height: 390px;
+}
+
+@media (min-width: 1500px) {
+  .workspace {
+    width: min(1520px, calc(100% - 96px));
+  }
+
+  .copy-editor .ProseMirror {
+    padding-inline: 58px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .toolbar-label {
+    display: none;
+  }
+
+  .toolbar button {
+    min-width: 36px;
+    justify-content: center;
+    padding-inline: 8px;
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace {
+    width: calc(100% - 24px);
+    margin-top: 14px;
+  }
+
+  .section-heading {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .copy-editor .ProseMirror {
+    min-height: 400px;
+    padding: 28px 20px 64px;
+    font-size: 16px;
+  }
+
+  .preview-frame {
+    min-height: 320px;
+  }
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Github } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import type { FormattingPreset, InsertionPreset, LinkPreset, Preset, SnippetPreset } from '@/core/presets/schemas'
 import { getDefaultPresetPack, listPresetPacks } from '@/core/presets/registry'
@@ -120,6 +121,19 @@ export function Copy2HtmlWorkspace() {
           <HtmlPreview result={result} previewTheme={previewTheme} />
         </div>
       </main>
+
+      <footer className={styles.credit}>
+        <span>Feito por</span>
+        <a
+          href="https://github.com/jhonatan-oliveiradev"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub de Jhonatan Oliveira"
+        >
+          <Github aria-hidden="true" size={14} strokeWidth={1.8} />
+          Jhonatan Oliveira
+        </a>
+      </footer>
 
       <div className="mobile-copy-action">
         <CopyToLiferayButton result={result} onNotice={showNotice} />

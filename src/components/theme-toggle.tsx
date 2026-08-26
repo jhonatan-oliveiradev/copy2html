@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { useTheme } from 'next-themes'
 
 const options = [
@@ -9,11 +9,11 @@ const options = [
   { value: 'dark', label: 'Escuro' },
 ] as const
 
+const subscribe = () => () => undefined
+
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false)
 
   return (
     <label className="theme-control">

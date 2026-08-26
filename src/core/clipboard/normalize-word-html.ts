@@ -12,9 +12,13 @@ function normalizeSpanEmphasis(span: HTMLElement): void {
 
   if (!isBold && !isItalic) return
 
-  let replacement: HTMLElement = span
-  if (isBold) replacement = replaceTag(replacement, 'strong')
-  if (isItalic) replacement = replaceTag(replacement, 'em')
+  if (isBold && isItalic) {
+    const strong = replaceTag(span, 'strong')
+    replaceTag(strong, 'em')
+    return
+  }
+
+  replaceTag(span, isBold ? 'strong' : 'em')
 }
 
 export function normalizeWordHtml(input: string): { html: string; notices: string[] } {

@@ -8,7 +8,7 @@ export type SerializationResult = {
   validation: ValidationResult
 }
 
-function canonicalize(html: string): string {
+function normalizeSemanticTags(html: string): string {
   const template = document.createElement('template')
   template.innerHTML = html
 
@@ -26,8 +26,16 @@ function canonicalize(html: string): string {
     node.replaceWith(em)
   })
 
+  return template.innerHTML
+}
+
+function canonicalize(html: string): string {
+  const template = document.createElement('template')
+  template.innerHTML = html
+
   const hasVisibleText = Boolean(template.content.textContent?.replace(/\u00a0/g, ' ').trim())
-  if (!hasVisibleText) return ''
+  const hasIntentionalBreak = Boolean(template.content.querySelector('br'))
+  if (!hasVisibleText && !hasIntentionalBreak) return ''
 
   return template.innerHTML
     .replaceAll('<br>', '<br />')
@@ -36,7 +44,8 @@ function canonicalize(html: string): string {
 }
 
 export function serializeEditorHtml(editorHtml: string): SerializationResult {
-  const firstPass = sanitizeHtml(editorHtml)
+  const normalizedInput = normalizeSemanticTags(editorHtml)
+  const firstPass = sanitizeHtml(normalizedInput)
   const html = canonicalize(firstPass.html)
   const sanitization: SanitizationResult = {
     ...firstPass,

@@ -1,12 +1,13 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import type { Editor } from '@tiptap/react'
 
 type EditorToolbarProps = {
   editor: Editor | null
 }
 
-function ToolIcon({ children }: { children: React.ReactNode }) {
+function ToolIcon({ children }: { children: ReactNode }) {
   return <span className="toolbar-icon" aria-hidden="true">{children}</span>
 }
 

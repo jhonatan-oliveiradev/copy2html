@@ -7,6 +7,15 @@ describe('serializeEditorHtml', () => {
     expect(result.html).toBe('<p><strong>Oi</strong><br /><br /></p>')
   })
 
+  it('canonicalizes browser RGB colors to hexadecimal output', () => {
+    const result = serializeEditorHtml(
+      '<p><strong style="color: rgb(102, 51, 153); display: inline-block">Clube Smiles</strong></p>',
+    )
+
+    expect(result.html).toContain('color: #663399')
+    expect(result.html).not.toContain('rgb(')
+  })
+
   it('retains approved Smiles-style markup without Smiles-specific serializer rules', () => {
     const result = serializeEditorHtml(
       '<p>Ainda não é <strong style="color: #663399; display: inline-block">Clube Smiles</strong>? <a href="#p_p_id_smilesmembershipclubjoinmacro_WAR_smilesmembershipsportlet_" style="color: #663399; text-decoration: underline; font-weight: bold">Assine agora</a></p>',

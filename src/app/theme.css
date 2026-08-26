@@ -92,29 +92,6 @@
   background: #3a301b;
 }
 
-.dark .theme-control select {
-  background: #1b1b20;
-  color: var(--text);
-  border-color: var(--border-strong);
-}
-
-.theme-control {
-  display: inline-flex;
-  align-items: center;
-}
-
-.theme-control select {
-  min-height: 38px;
-  padding: 0 30px 0 11px;
-  border: 1px solid var(--border-strong);
-  border-radius: 9px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 550;
-  cursor: pointer;
-}
-
 .header-actions {
   display: flex;
   align-items: center;
@@ -124,11 +101,6 @@
 @media (max-width: 720px) {
   .app-header .header-actions > .copy-button {
     display: none;
-  }
-
-  .theme-control select {
-    min-height: 36px;
-    max-width: 112px;
   }
 
   .dark .mobile-copy-action {

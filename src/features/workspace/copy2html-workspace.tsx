@@ -85,30 +85,32 @@ export function Copy2HtmlWorkspace() {
       </div>
 
       <main className="workspace">
-        <section className="editor-section" aria-labelledby="editor-title">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">1. Conteúdo</span>
-              <h2 id="editor-title">Editor</h2>
+        <div className={styles.primaryGrid}>
+          <section className="editor-section" aria-labelledby="editor-title">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">1. Conteúdo</span>
+                <h2 id="editor-title">Editor</h2>
+              </div>
+              <p>Copie do Word e cole aqui. Negritos e links compatíveis são preservados; resíduos do Word são removidos.</p>
             </div>
-            <p>Copie do Word e cole aqui. Negritos e links compatíveis são preservados; resíduos do Word são removidos.</p>
-          </div>
-          <CopyEditor onSerializedChange={updateResult} onNotice={showNotice} registerPresetActions={setPresetActions} />
-        </section>
+            <CopyEditor onSerializedChange={updateResult} onNotice={showNotice} registerPresetActions={setPresetActions} />
+          </section>
 
-        <aside className={styles.presetRail} aria-label="Presets de formatação">
-          <PresetPanel
-            packs={packs}
-            activePackId={activePackId}
-            packEnabled={packEnabled}
-            customPresets={customPresets}
-            actions={presetActions}
-            onPackChange={setActivePackId}
-            onPackEnabledChange={setPackEnabled}
-            onCreateCustomPreset={createCustomPreset}
-            onNotice={showNotice}
-          />
-        </aside>
+          <aside className={styles.presetRail} aria-label="Presets de formatação">
+            <PresetPanel
+              packs={packs}
+              activePackId={activePackId}
+              packEnabled={packEnabled}
+              customPresets={customPresets}
+              actions={presetActions}
+              onPackChange={setActivePackId}
+              onPackEnabledChange={setPackEnabled}
+              onCreateCustomPreset={createCustomPreset}
+              onNotice={showNotice}
+            />
+          </aside>
+        </div>
 
         <div className="result-grid">
           <HtmlOutputPanel result={result} />

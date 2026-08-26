@@ -61,10 +61,12 @@ test('publishes Word copy as clean Liferay HTML with Smiles presets', async ({ p
   await expect(page.getByRole('heading', { name: 'Copy2HTML' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Smiles' })).toBeVisible()
 
-  const themeControl = page.getByRole('combobox', { name: 'Tema da interface' })
-  await themeControl.selectOption('dark')
+  const themeTrigger = page.getByRole('button', { name: 'Alterar tema' })
+  await themeTrigger.click()
+  await page.getByRole('menuitem', { name: 'Escuro' }).click()
   await expect(page.locator('html')).toHaveClass(/dark/)
-  await themeControl.selectOption('light')
+  await themeTrigger.click()
+  await page.getByRole('menuitem', { name: 'Claro' }).click()
   await expect(page.locator('html')).toHaveClass(/light/)
 
   const editor = page.locator('.ProseMirror')

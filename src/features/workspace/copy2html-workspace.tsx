@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ThemeToggle } from '@/components/theme-toggle'
+import {
+  createPortablePresetPack,
+  mergeImportedPresets,
+  parsePortablePresetPack,
+  portablePresetFilename,
+  serializePortablePresetPack,
+} from '@/core/presets/portability'
 import type { FormattingPreset, InsertionPreset, LinkPreset, Preset, SnippetPreset } from '@/core/presets/schemas'
 import { getDefaultPresetPack, listPresetPacks } from '@/core/presets/registry'
 import { loadCustomPresets, saveCustomPresets } from '@/core/presets/storage'
@@ -36,6 +43,10 @@ function GithubMark() {
 
 export function Copy2HtmlWorkspace() {
   const packs = useMemo(() => listPresetPacks(), [])
+  const officialPresetIds = useMemo(
+    () => new Set(packs.flatMap((pack) => pack.presets.map((preset) => preset.id))),
+    [packs],
+  )
   const [activePackId, setActivePackId] = useState(() => getDefaultPresetPack().id)
   const [packEnabled, setPackEnabled] = useState(true)
   const [customPresets, setCustomPresets] = useState<Preset[]>([])
@@ -71,6 +82,83 @@ export function Copy2HtmlWorkspace() {
       }
     },
     [customPresets, showNotice],
+  )
+
+  const exportCustomPresets = useCallback(() => {
+    if (!customPresets.length) {
+      showNotice('Crie ao menos um preset pessoal antes de exportar.')
+      return
+    }
+
+    const suggestedName = activePack?.name ? `${activePack.name} — presets pessoais` : 'Presets pessoais do Copy2HTML'
+    const name = window.prompt('Nome do pack que será compartilhado:', suggestedName)?.trim()
+    if (!name) return
+
+    const author = window.prompt('Autor do pack (opcional):', '')?.trim() || undefined
+
+    try {
+      const pack = createPortablePresetPack(customPresets, {
+        name,
+        author,
+        description: activePack?.name ? `Presets pessoais criados no contexto do pack ${activePack.name}.` : undefined,
+      })
+      const blob = new Blob([serializePortablePresetPack(pack)], { type: 'application/json;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = portablePresetFilename(name)
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+      showNotice(`${customPresets.length} preset${customPresets.length === 1 ? '' : 's'} exportado${customPresets.length === 1 ? '' : 's'} com segurança.`)
+    } catch {
+      showNotice('Não foi possível exportar os presets pessoais.')
+    }
+  }, [activePack?.name, customPresets, showNotice])
+
+  const importCustomPresets = useCallback(
+    async (file: File) => {
+      if (file.size > 1_000_000) {
+        showNotice('O arquivo de presets é grande demais para ser importado.')
+        return
+      }
+
+      const parsed = parsePortablePresetPack(await file.text())
+      if (!parsed.success) {
+        showNotice(parsed.error)
+        return
+      }
+
+      if (!parsed.data.presets.length) {
+        showNotice('O pack importado não contém presets.')
+        return
+      }
+
+      const conflictCount = parsed.data.presets.filter((preset) => customPresets.some((current) => current.id === preset.id)).length
+      const strategy = conflictCount > 0 && window.confirm(
+        `${conflictCount} preset${conflictCount === 1 ? '' : 's'} pessoal${conflictCount === 1 ? '' : 'is'} já existe${conflictCount === 1 ? '' : 'm'}.\n\nOK: substituir pelos presets importados.\nCancelar: manter os presets atuais e importar apenas os novos.`,
+      )
+        ? 'replace-existing'
+        : 'keep-existing'
+
+      try {
+        const merged = mergeImportedPresets(customPresets, parsed.data.presets, strategy, officialPresetIds)
+        const saved = saveCustomPresets(merged.presets)
+        setCustomPresets(saved.presets)
+
+        const details = [
+          `${merged.imported} importado${merged.imported === 1 ? '' : 's'}`,
+          merged.conflicts ? `${merged.conflicts} conflito${merged.conflicts === 1 ? '' : 's'}` : null,
+          merged.blockedOfficial ? `${merged.blockedOfficial} ID oficial ignorado${merged.blockedOfficial === 1 ? '' : 's'}` : null,
+        ].filter(Boolean).join(' · ')
+
+        showNotice(`${parsed.data.name}: ${details}.${saved.persistent ? '' : ` ${saved.notice ?? ''}`}`)
+      } catch {
+        showNotice('Não foi possível salvar os presets importados.')
+      }
+    },
+    [customPresets, officialPresetIds, showNotice],
   )
 
   return (
@@ -118,6 +206,8 @@ export function Copy2HtmlWorkspace() {
               onPackChange={setActivePackId}
               onPackEnabledChange={setPackEnabled}
               onCreateCustomPreset={createCustomPreset}
+              onImportPresets={importCustomPresets}
+              onExportPresets={exportCustomPresets}
               onNotice={showNotice}
             />
           </aside>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type {
   FormattingPreset,
   InsertionPreset,
@@ -27,6 +27,8 @@ type PresetPanelProps = {
   onPackChange: (id: string) => void
   onPackEnabledChange: (enabled: boolean) => void
   onCreateCustomPreset: (preset: FormattingPreset) => void
+  onImportPresets: (file: File) => void | Promise<void>
+  onExportPresets: () => void
   onNotice: (message: string) => void
 }
 
@@ -46,9 +48,12 @@ export function PresetPanel({
   onPackChange,
   onPackEnabledChange,
   onCreateCustomPreset,
+  onImportPresets,
+  onExportPresets,
   onNotice,
 }: PresetPanelProps) {
   const [query, setQuery] = useState('')
+  const importInputRef = useRef<HTMLInputElement>(null)
   const basePack = packs.find((pack) => pack.id === 'base')
   const activePack = packs.find((pack) => pack.id === activePackId)
 
@@ -84,6 +89,12 @@ export function PresetPanel({
     if (!applied) onNotice('Selecione um trecho compatível no editor ou posicione o cursor antes de aplicar este preset.')
   }
 
+  async function handleImportFile(file: File | undefined) {
+    if (!file) return
+    await onImportPresets(file)
+    if (importInputRef.current) importInputRef.current.value = ''
+  }
+
   return (
     <aside className="preset-panel" aria-label="Presets">
       <div className="panel-heading-row">
@@ -112,6 +123,25 @@ export function PresetPanel({
         Buscar preset
         <input type="search" placeholder="Ex.: Clube, quebra, macro..." value={query} onChange={(event) => setQuery(event.target.value)} />
       </label>
+
+      <section className="preset-group" aria-labelledby="preset-share-title">
+        <h3 id="preset-share-title">Compartilhar presets pessoais</h3>
+        <div className="inline-actions">
+          <button type="button" className="secondary-button" onClick={() => importInputRef.current?.click()}>
+            Importar
+          </button>
+          <button type="button" className="ghost-button" disabled={customPresets.length === 0} onClick={onExportPresets}>
+            Exportar {customPresets.length > 0 ? `(${customPresets.length})` : ''}
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            hidden
+            accept=".json,.copy2html.json,application/json"
+            onChange={(event) => void handleImportFile(event.target.files?.[0])}
+          />
+        </div>
+      </section>
 
       {(['formatting', 'link', 'insertion', 'snippet'] as const).map((type) => {
         const items = presets.filter((preset) => preset.type === type)

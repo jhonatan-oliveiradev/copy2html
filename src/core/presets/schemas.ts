@@ -1,4 +1,13 @@
 import { z } from 'zod'
+import { isSafeHref, sanitizeStyle } from '@/core/sanitizer/sanitizer-policy'
+
+function templateStylesAreSafe(value: string): boolean {
+  const matches = value.matchAll(/\bstyle\s*=\s*["']([^"']*)["']/gi)
+  for (const match of matches) {
+    if (sanitizeStyle(match[1] ?? '').changed) return false
+  }
+  return true
+}
 
 const safeTemplate = z
   .string()
@@ -6,6 +15,7 @@ const safeTemplate = z
   .refine((value) => !/<script\b/i.test(value), 'Scripts are not allowed in preset templates')
   .refine((value) => !/\son\w+\s*=/i.test(value), 'Event handlers are not allowed in preset templates')
   .refine((value) => !/javascript\s*:/i.test(value), 'Unsafe URL schemes are not allowed')
+  .refine(templateStylesAreSafe, 'Unsupported style properties are not allowed in preset templates')
 
 const basePresetSchema = z.object({
   id: z.string().min(1).regex(/^[a-z0-9-]+$/),
@@ -21,7 +31,7 @@ export const formattingPresetSchema = basePresetSchema.extend({
 
 export const linkPresetSchema = basePresetSchema.extend({
   type: z.literal('link'),
-  href: z.string().min(1),
+  href: z.string().min(1).refine(isSafeHref, 'Unsafe or invalid link destination'),
   template: safeTemplate
     .refine((value) => value.includes('{{selection}}'), 'Link templates require {{selection}}')
     .refine((value) => value.includes('{{href}}'), 'Link templates require {{href}}'),

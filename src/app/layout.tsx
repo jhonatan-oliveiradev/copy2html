@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 import './typography.css'
 import './theme.css'
+import './premium.css'
 
 const geistSans = Geist({
   subsets: ['latin'],

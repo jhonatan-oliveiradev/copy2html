@@ -37,9 +37,13 @@ export function Copy2HtmlWorkspace() {
   const updateResult = useCallback((next: SerializationResult) => setResult(next), [])
 
   useEffect(() => {
-    const loaded = loadCustomPresets()
-    setCustomPresets(loaded.presets)
-    if (loaded.notice) showNotice(loaded.notice)
+    const timeoutId = window.setTimeout(() => {
+      const loaded = loadCustomPresets()
+      setCustomPresets(loaded.presets)
+      if (loaded.notice) showNotice(loaded.notice)
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [showNotice])
 
   const createCustomPreset = useCallback(

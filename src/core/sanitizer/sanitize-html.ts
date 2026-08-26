@@ -42,9 +42,9 @@ export function sanitizeHtml(input: string): SanitizationResult {
       const cleaned = sanitizeStyle(style)
       if (cleaned.value) element.setAttribute('style', cleaned.value)
       else element.removeAttribute('style')
-      if (cleaned.changed || cleaned.value !== style.trim().replace(/;$/, '')) {
+      if (cleaned.changed) {
         changed = true
-        notices.push('Estilos não suportados foram removidos ou normalizados.')
+        notices.push('Estilos não suportados foram removidos.')
       }
     }
 

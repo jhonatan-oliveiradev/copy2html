@@ -1,0 +1,46 @@
+html,
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.brand-row h1,
+.section-heading h2,
+.panel-heading-row h2,
+.preset-panel h2 {
+  font-weight: 650;
+}
+
+.version-badge,
+.pack-badge,
+.status-badge,
+.eyebrow,
+.preset-group h3 {
+  font-weight: 600;
+}
+
+.copy-button,
+.primary-button,
+.secondary-button,
+.ghost-button,
+.toolbar button,
+.field-label,
+.custom-preset-form label {
+  font-weight: 550;
+}
+
+.flow-hint span,
+.preset-button {
+  font-weight: 500;
+}
+
+.copy-editor .ProseMirror {
+  font-family: var(--font-geist-sans), ui-sans-serif, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.006em;
+}
+
+.html-code {
+  font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-variant-ligatures: none;
+  letter-spacing: -0.01em;
+}

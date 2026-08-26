@@ -24,6 +24,13 @@ describe('official preset packs', () => {
     )
   })
 
+  it('uses Nunito for the Smiles renderer preview', () => {
+    const smiles = getPresetPack('smiles')!
+
+    expect(smiles.previewTheme?.fontFamily).toContain('Nunito')
+    expect(smiles.previewTheme?.fontStylesheetUrl).toContain('fonts.googleapis.com')
+  })
+
   it('marks historical structural snippets for review', () => {
     const smiles = getPresetPack('smiles')!
     const snippets = smiles.presets.filter((preset) => preset.type === 'snippet')

@@ -1,20 +1,20 @@
 .primaryGrid {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 292px;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 318px;
+  gap: 16px;
   align-items: start;
   min-width: 0;
 }
 
 .presetRail {
   min-width: 0;
-  height: min(600px, calc(100vh - 190px));
-  min-height: 520px;
+  height: min(608px, calc(100vh - 154px));
+  min-height: 536px;
   position: sticky;
-  top: 116px;
+  top: 128px;
   overflow: hidden;
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
 }
 
 .presetRail :global(.preset-panel) {
@@ -24,6 +24,8 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border-strong) 80%, transparent) transparent;
 }
 
 .credit {
@@ -34,13 +36,13 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  min-height: 36px;
-  padding: 8px 20px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(12px);
+  min-height: 32px;
+  padding: 7px 20px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter: blur(18px) saturate(130%);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
 }
 
@@ -62,6 +64,12 @@
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 3px;
+}
+
+@media (max-width: 1180px) {
+  .primaryGrid {
+    grid-template-columns: minmax(0, 1fr) 292px;
+  }
 }
 
 @media (max-width: 980px) {

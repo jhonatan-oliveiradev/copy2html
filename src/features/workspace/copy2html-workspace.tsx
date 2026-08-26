@@ -35,6 +35,9 @@ export function Copy2HtmlWorkspace() {
   const [result, setResult] = useState<SerializationResult>(emptyResult)
   const [notice, setNotice] = useState('Cole sua copy do Word no editor para começar.')
 
+  const activePack = useMemo(() => packs.find((pack) => pack.id === activePackId), [activePackId, packs])
+  const previewTheme = packEnabled ? activePack?.previewTheme : undefined
+
   const showNotice = useCallback((message: string) => setNotice(message), [])
   const updateResult = useCallback((next: SerializationResult) => setResult(next), [])
 
@@ -114,7 +117,7 @@ export function Copy2HtmlWorkspace() {
 
         <div className="result-grid">
           <HtmlOutputPanel result={result} />
-          <HtmlPreview result={result} />
+          <HtmlPreview result={result} previewTheme={previewTheme} />
         </div>
       </main>
 

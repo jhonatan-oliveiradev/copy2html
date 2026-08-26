@@ -22,8 +22,8 @@ describe('PresetPanel', () => {
     expect(screen.getByRole('heading', { name: 'Smiles' })).toBeInTheDocument()
     expect(screen.getByText('Formatação')).toBeInTheDocument()
     expect(screen.getByText('Links e macros')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Clube Smiles/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Macro Clube Smiles/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Clube Smiles$/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Macro Clube Smiles$/ })).toBeInTheDocument()
   })
 
   it('filters presets by search query', () => {

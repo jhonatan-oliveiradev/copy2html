@@ -10,6 +10,7 @@ import { CopyToLiferayButton } from '@/features/html-output/copy-to-liferay-butt
 import { HtmlOutputPanel } from '@/features/html-output/html-output-panel'
 import { PresetPanel } from '@/features/presets/preset-panel'
 import { HtmlPreview } from '@/features/preview/html-preview'
+import styles from './copy2html-workspace.module.css'
 
 const emptyResult: SerializationResult = {
   html: '',
@@ -91,17 +92,19 @@ export function Copy2HtmlWorkspace() {
           <CopyEditor onSerializedChange={updateResult} onNotice={showNotice} registerPresetActions={setPresetActions} />
         </section>
 
-        <PresetPanel
-          packs={packs}
-          activePackId={activePackId}
-          packEnabled={packEnabled}
-          customPresets={customPresets}
-          actions={presetActions}
-          onPackChange={setActivePackId}
-          onPackEnabledChange={setPackEnabled}
-          onCreateCustomPreset={createCustomPreset}
-          onNotice={showNotice}
-        />
+        <aside className={styles.presetRail} aria-label="Presets de formatação">
+          <PresetPanel
+            packs={packs}
+            activePackId={activePackId}
+            packEnabled={packEnabled}
+            customPresets={customPresets}
+            actions={presetActions}
+            onPackChange={setActivePackId}
+            onPackEnabledChange={setPackEnabled}
+            onCreateCustomPreset={createCustomPreset}
+            onNotice={showNotice}
+          />
+        </aside>
 
         <div className="result-grid">
           <HtmlOutputPanel result={result} />

@@ -27,6 +27,16 @@ export function isSafeHref(href: string): boolean {
   }
 }
 
+function canonicalizeColor(value: string): string {
+  const match = value.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i)
+  if (!match) return value
+
+  const channels = match.slice(1).map(Number)
+  if (channels.some((channel) => channel < 0 || channel > 255)) return value
+
+  return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+}
+
 export function sanitizeStyle(style: string): { value: string; changed: boolean } {
   const declarations = style
     .split(';')
@@ -44,13 +54,14 @@ export function sanitizeStyle(style: string): { value: string; changed: boolean 
     }
 
     const property = declaration.slice(0, separator).trim().toLowerCase()
-    const value = declaration.slice(separator + 1).trim()
+    const rawValue = declaration.slice(separator + 1).trim()
 
-    if (!ALLOWED_STYLE_PROPERTIES.has(property) || /url\s*\(|expression\s*\(|javascript\s*:/i.test(value)) {
+    if (!ALLOWED_STYLE_PROPERTIES.has(property) || /url\s*\(|expression\s*\(|javascript\s*:/i.test(rawValue)) {
       changed = true
       continue
     }
 
+    const value = property === 'color' ? canonicalizeColor(rawValue) : rawValue
     safe.push(`${property}: ${value}`)
   }
 

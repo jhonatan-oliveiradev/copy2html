@@ -4,8 +4,17 @@ function canonicalizeBreaks(html: string): string {
   return html
     .replaceAll('<br>', '<br />')
     .replace(/(?:<br \/>){3,}/g, '<br /><br />')
-    .replace(/^(?:<br \/>)+|(?:<br \/>)+$/g, '')
     .trim()
+}
+
+function hasMeaningfulSiblingAfter(node: Element): boolean {
+  let sibling = node.nextSibling
+  while (sibling) {
+    if (sibling.nodeType === Node.ELEMENT_NODE) return true
+    if (sibling.nodeType === Node.TEXT_NODE && sibling.textContent?.trim()) return true
+    sibling = sibling.nextSibling
+  }
+  return false
 }
 
 function flattenBlockMarkup(html: string): string {
@@ -14,12 +23,15 @@ function flattenBlockMarkup(html: string): string {
 
   const blocks = [...template.content.querySelectorAll('p, div')]
   for (const block of blocks) {
+    const shouldSeparate = hasMeaningfulSiblingAfter(block)
     const separatorCount = block.tagName === 'P' ? 2 : 1
     const fragment = document.createDocumentFragment()
 
     while (block.firstChild) fragment.appendChild(block.firstChild)
-    for (let index = 0; index < separatorCount; index += 1) {
-      fragment.appendChild(document.createElement('br'))
+    if (shouldSeparate) {
+      for (let index = 0; index < separatorCount; index += 1) {
+        fragment.appendChild(document.createElement('br'))
+      }
     }
 
     block.replaceWith(fragment)

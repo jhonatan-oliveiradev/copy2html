@@ -1,6 +1,3 @@
-import { validateHtml } from '@/core/validator/validate-html'
-import type { SerializationResult } from './serialize-editor-html'
-
 export type LiferayTarget = 'liferay-6' | 'liferay-7'
 
 function canonicalizeBreaks(html: string): string {
@@ -38,29 +35,7 @@ function encodeLegacyPictograms(html: string): string {
   })
 }
 
-function toLiferay6Html(html: string): string {
+export function applyLiferayCompatibility(html: string, target: LiferayTarget): string {
+  if (target === 'liferay-7') return html
   return encodeLegacyPictograms(flattenBlockMarkup(html))
-}
-
-export function applyLiferayCompatibility(
-  result: SerializationResult,
-  target: LiferayTarget,
-): SerializationResult {
-  if (target === 'liferay-7') return result
-
-  const html = toLiferay6Html(result.sanitization.html)
-
-  return {
-    html,
-    sanitization: {
-      ...result.sanitization,
-      html,
-      changed: result.sanitization.changed || html !== result.sanitization.html,
-      notices:
-        html !== result.sanitization.html
-          ? [...result.sanitization.notices, 'Compatibilidade Liferay 6 aplicada: blocos convertidos em quebras e pictogramas codificados.']
-          : result.sanitization.notices,
-    },
-    validation: validateHtml(html),
-  }
 }

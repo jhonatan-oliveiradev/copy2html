@@ -1,6 +1,7 @@
 import { sanitizeHtml, type SanitizationResult } from '@/core/sanitizer/sanitize-html'
 import { validateHtml } from '@/core/validator/validate-html'
 import type { ValidationResult } from '@/core/validator/validation-types'
+import { applyLiferayCompatibility, type LiferayTarget } from './liferay-compatibility'
 
 export type SerializationResult = {
   html: string
@@ -43,14 +44,23 @@ function canonicalize(html: string): string {
     .trim()
 }
 
-export function serializeEditorHtml(editorHtml: string): SerializationResult {
+export function serializeEditorHtml(
+  editorHtml: string,
+  target: LiferayTarget = 'liferay-6',
+): SerializationResult {
   const normalizedInput = normalizeSemanticTags(editorHtml)
   const firstPass = sanitizeHtml(normalizedInput)
-  const html = canonicalize(firstPass.html)
+  const canonicalHtml = canonicalize(firstPass.html)
+  const html = applyLiferayCompatibility(canonicalHtml, target)
+  const compatibilityChanged = html !== canonicalHtml
   const sanitization: SanitizationResult = {
     ...firstPass,
     html,
-    changed: firstPass.changed,
+    changed: firstPass.changed || compatibilityChanged,
+    notices:
+      target === 'liferay-6' && compatibilityChanged
+        ? [...firstPass.notices, 'Compatibilidade Liferay 6 aplicada: parágrafos convertidos em <br /> e pictogramas codificados como entidades HTML.']
+        : firstPass.notices,
   }
 
   return {

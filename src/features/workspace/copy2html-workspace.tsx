@@ -34,11 +34,11 @@ import {
   portablePresetFilename,
   serializePortablePresetPack,
 } from '@/core/presets/portability'
-import type { FormattingPreset, InsertionPreset, LinkPreset, Preset, SnippetPreset } from '@/core/presets/schemas'
+import type { FormattingPreset, Preset } from '@/core/presets/schemas'
 import { getDefaultPresetPack, listPresetPacks } from '@/core/presets/registry'
 import { loadCustomPresets, saveCustomPresets } from '@/core/presets/storage'
 import type { SerializationResult } from '@/core/serializer/serialize-editor-html'
-import { CopyEditor } from '@/features/editor/copy-editor'
+import { CopyEditor, type EditorActions } from '@/features/editor/copy-editor'
 import { CopyToLiferayButton } from '@/features/html-output/copy-to-liferay-button'
 import { HtmlOutputPanel } from '@/features/html-output/html-output-panel'
 import { ImageIngestionPanel } from '@/features/image-ingestion/image-ingestion-panel'
@@ -50,13 +50,6 @@ const emptyResult: SerializationResult = {
   html: '',
   sanitization: { html: '', changed: false, notices: [] },
   validation: { severity: 'valid', issues: [] },
-}
-
-type PresetActions = {
-  applyFormattingPreset: (preset: FormattingPreset) => boolean
-  applyLinkPreset: (preset: LinkPreset) => boolean
-  insertPreset: (preset: InsertionPreset) => boolean
-  insertSnippet: (preset: SnippetPreset) => boolean
 }
 
 type ContentSource = 'text' | 'image'
@@ -82,7 +75,7 @@ export function Copy2HtmlWorkspace() {
   const [contentSource, setContentSource] = useState<ContentSource>('text')
   const [customPresets, setCustomPresets] = useState<Preset[]>([])
   const [importedLibraries, setImportedLibraries] = useState<PresetLibrary[]>([])
-  const [presetActions, setPresetActions] = useState<PresetActions | null>(null)
+  const [presetActions, setPresetActions] = useState<EditorActions | null>(null)
   const [result, setResult] = useState<SerializationResult>(emptyResult)
   const [notice, setNotice] = useState('Cole sua copy do Word no editor para começar.')
   const [pendingLibrary, setPendingLibrary] = useState<PresetLibrary | null>(null)
@@ -128,6 +121,13 @@ export function Copy2HtmlWorkspace() {
         : 'Modo imagem ativo. Envie, arraste ou cole uma captura do Figma.',
     )
   }, [showNotice])
+
+  const handleExtractedContent = useCallback((html: string) => {
+    if (!presetActions) return false
+    const replaced = presetActions.replaceContent(html)
+    if (replaced) setContentSource('text')
+    return replaced
+  }, [presetActions])
 
   const handleLibraryChange = useCallback((id: string) => {
     setActiveLibraryId(id)
@@ -274,7 +274,7 @@ export function Copy2HtmlWorkspace() {
               </div>
               <div className="flex max-w-[560px] flex-col items-end gap-3">
                 <p className="m-0 text-right text-xs text-[var(--muted)]">
-                  Use texto para conteúdo copiado do Word ou imagem para preparar uma captura/export do Figma.
+                  Use texto para conteúdo copiado do Word ou imagem para extrair uma captura/export do Figma.
                 </p>
                 <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-1" role="group" aria-label="Origem do conteúdo">
                   <button
@@ -301,7 +301,7 @@ export function Copy2HtmlWorkspace() {
               <CopyEditor onSerializedChange={updateResult} onNotice={showNotice} registerPresetActions={setPresetActions} />
             </div>
             <div hidden={contentSource !== 'image'}>
-              <ImageIngestionPanel onNotice={showNotice} />
+              <ImageIngestionPanel onNotice={showNotice} onExtracted={handleExtractedContent} />
             </div>
           </section>
 

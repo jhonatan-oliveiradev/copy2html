@@ -7,17 +7,18 @@ import type { SerializationResult } from '@/core/serializer/serialize-editor-htm
 import { EditorToolbar } from './editor-toolbar'
 import { useCopyEditor } from './use-copy-editor'
 
-type PresetActions = {
+export type EditorActions = {
   applyFormattingPreset: (preset: FormattingPreset) => boolean
   applyLinkPreset: (preset: LinkPreset) => boolean
   insertPreset: (preset: InsertionPreset) => boolean
   insertSnippet: (preset: SnippetPreset) => boolean
+  replaceContent: (html: string) => boolean
 }
 
 type CopyEditorProps = {
   onSerializedChange: (result: SerializationResult) => void
   onNotice: (message: string) => void
-  registerPresetActions?: (actions: PresetActions) => void
+  registerPresetActions?: (actions: EditorActions) => void
 }
 
 export function CopyEditor({ onSerializedChange, onNotice, registerPresetActions }: CopyEditorProps) {
@@ -29,12 +30,14 @@ export function CopyEditor({ onSerializedChange, onNotice, registerPresetActions
       applyLinkPreset: actions.applyLinkPreset,
       insertPreset: actions.insertPreset,
       insertSnippet: actions.insertSnippet,
+      replaceContent: actions.replaceContent,
     })
   }, [
     actions.applyFormattingPreset,
     actions.applyLinkPreset,
     actions.insertPreset,
     actions.insertSnippet,
+    actions.replaceContent,
     registerPresetActions,
   ])
 

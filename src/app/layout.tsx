@@ -6,6 +6,7 @@ import './typography.css'
 import './theme.css'
 import './premium.css'
 import './premium-polish.css'
+import './header-compact.css'
 
 const geistSans = Geist({
   subsets: ['latin'],

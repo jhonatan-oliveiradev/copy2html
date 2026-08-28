@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { extractVisualCopyWithGemini } from './gemini-visual-extractor'
+import { extractVisualCopyWithGemini, GEMINI_MODEL } from './gemini-visual-extractor'
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
 
 describe('extractVisualCopyWithGemini', () => {
-  it('sends the image server-side and validates structured output', async () => {
+  it('uses the current Gemini model, sends the image server-side and validates structured output', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -36,10 +36,12 @@ describe('extractVisualCopyWithGemini', () => {
     const file = new File([new Uint8Array([1, 2, 3])], 'campaign.png', { type: 'image/png' })
     const result = await extractVisualCopyWithGemini(file, 'server-secret')
 
+    expect(GEMINI_MODEL).toBe('gemini-3.5-flash-lite')
     expect(result.blocks[0]?.segments[0]?.text).toBe('Oferta')
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toContain('/models/gemini-3.5-flash-lite:generateContent')
     expect((init.headers as Record<string, string>)['x-goog-api-key']).toBe('server-secret')
     const body = JSON.parse(String(init.body))
     expect(body.contents[0].parts[0].inlineData.mimeType).toBe('image/png')

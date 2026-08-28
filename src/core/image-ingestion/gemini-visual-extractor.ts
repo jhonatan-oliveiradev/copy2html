@@ -21,11 +21,11 @@ const responseSchema = {
         properties: {
           segments: {
             type: 'ARRAY',
-            description: 'Consecutive text runs with only visually evident formatting.',
+            description: 'Consecutive text runs grouped only by real formatting changes, never by visual line wrapping.',
             items: {
               type: 'OBJECT',
               properties: {
-                text: { type: 'STRING', description: 'Exact visible text, preserving punctuation, accents and emoji.' },
+                text: { type: 'STRING', description: 'Exact visible text, preserving punctuation, accents, emoji and natural spaces between words even across visual line wraps.' },
                 bold: { type: 'BOOLEAN', description: 'True only when the text is visibly bold or semibold.' },
                 italic: { type: 'BOOLEAN', description: 'True only when the text is visibly italic.' },
                 color: {
@@ -52,13 +52,17 @@ Transcreva a copy visível nesta arte de campanha para uma estrutura de texto ed
 Regras obrigatórias:
 - siga a ordem natural de leitura;
 - copie o texto exatamente como aparece, incluindo acentos, pontuação, números e emojis;
+- preserve os espaços naturais entre palavras, inclusive quando duas palavras ficam em linhas visuais diferentes apenas por falta de largura;
+- uma quebra visual de linha causada pelo tamanho da caixa NÃO é quebra de parágrafo, NÃO é quebra manual e NÃO cria um novo segmento;
+- se duas partes consecutivas possuem exatamente a mesma combinação de bold, italic e color, mantenha-as no MESMO segmento mesmo que apareçam em linhas visuais diferentes;
+- crie um novo segmento somente quando houver uma mudança real de formatação;
 - preserve apenas negrito/semibold e itálico quando forem visualmente claros;
 - para cor de texto, classifique somente quando houver correspondência visual clara com uma destas cores Smiles: ${SMILES_VISUAL_COLORS.join(', ')};
 - se a cor não corresponder claramente à paleta permitida, retorne color como null;
 - não invente links, URLs, estilos, HTML, CSS ou texto ausente;
 - não descreva imagens, logos, botões ou elementos gráficos que não sejam texto de copy;
 - quando um botão ou CTA tiver texto legível, transcreva apenas o texto;
-- não crie um novo bloco só porque uma linha quebrou visualmente por largura; use um novo bloco para parágrafo, título, CTA ou trecho claramente separado;
+- use um novo bloco somente para parágrafo, título, CTA ou trecho claramente separado semanticamente;
 - mantenha bullets ou marcadores visíveis como parte do próprio texto;
 - se houver dúvida sobre bold, italic ou color, prefira false/null.
 `.trim()

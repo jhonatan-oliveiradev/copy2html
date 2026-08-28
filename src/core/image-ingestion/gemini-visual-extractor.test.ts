@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { extractVisualCopyWithGemini, VisualExtractionError } from './gemini-visual-extractor'
+import { extractVisualCopyWithGemini } from './gemini-visual-extractor'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -59,7 +59,7 @@ describe('extractVisualCopyWithGemini', () => {
 
     const file = new File([new Uint8Array([1])], 'campaign.png', { type: 'image/png' })
 
-    await expect(extractVisualCopyWithGemini(file, 'server-secret')).rejects.toMatchObject<Partial<VisualExtractionError>>({
+    await expect(extractVisualCopyWithGemini(file, 'server-secret')).rejects.toMatchObject({
       code: 'invalid-response',
     })
   })

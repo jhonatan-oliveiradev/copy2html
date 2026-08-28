@@ -1,7 +1,14 @@
-import { structuredVisualCopySchema, type StructuredVisualCopy } from './structured-copy'
+import {
+  SMILES_VISUAL_COLORS,
+  structuredVisualCopySchema,
+  type StructuredVisualCopy,
+} from './structured-copy'
 
-export const GEMINI_MODEL = 'gemini-3.5-flash-lite'
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite'
+
+function geminiEndpoint(model: string) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+}
 
 const responseSchema = {
   type: 'OBJECT',
@@ -21,8 +28,14 @@ const responseSchema = {
                 text: { type: 'STRING', description: 'Exact visible text, preserving punctuation, accents and emoji.' },
                 bold: { type: 'BOOLEAN', description: 'True only when the text is visibly bold or semibold.' },
                 italic: { type: 'BOOLEAN', description: 'True only when the text is visibly italic.' },
+                color: {
+                  type: 'STRING',
+                  nullable: true,
+                  enum: SMILES_VISUAL_COLORS,
+                  description: 'Use only when the text color clearly matches one of the approved Smiles colors; otherwise null.',
+                },
               },
-              required: ['text', 'bold', 'italic'],
+              required: ['text', 'bold', 'italic', 'color'],
             },
           },
         },
@@ -40,12 +53,14 @@ Regras obrigatórias:
 - siga a ordem natural de leitura;
 - copie o texto exatamente como aparece, incluindo acentos, pontuação, números e emojis;
 - preserve apenas negrito/semibold e itálico quando forem visualmente claros;
+- para cor de texto, classifique somente quando houver correspondência visual clara com uma destas cores Smiles: ${SMILES_VISUAL_COLORS.join(', ')};
+- se a cor não corresponder claramente à paleta permitida, retorne color como null;
 - não invente links, URLs, estilos, HTML, CSS ou texto ausente;
 - não descreva imagens, logos, botões ou elementos gráficos que não sejam texto de copy;
 - quando um botão ou CTA tiver texto legível, transcreva apenas o texto;
 - não crie um novo bloco só porque uma linha quebrou visualmente por largura; use um novo bloco para parágrafo, título, CTA ou trecho claramente separado;
 - mantenha bullets ou marcadores visíveis como parte do próprio texto;
-- se houver dúvida sobre bold/italic, prefira false.
+- se houver dúvida sobre bold, italic ou color, prefira false/null.
 `.trim()
 
 type GeminiResponse = {
@@ -70,13 +85,15 @@ export class VisualExtractionError extends Error {
 export async function extractVisualCopyWithGemini(
   file: File,
   apiKey: string,
+  model = DEFAULT_GEMINI_MODEL,
 ): Promise<StructuredVisualCopy> {
   if (!apiKey.trim()) {
     throw new VisualExtractionError('A integração visual ainda não está configurada.', 'configuration')
   }
 
+  const normalizedModel = model.trim() || DEFAULT_GEMINI_MODEL
   const imageBase64 = Buffer.from(await file.arrayBuffer()).toString('base64')
-  const response = await fetch(GEMINI_ENDPOINT, {
+  const response = await fetch(geminiEndpoint(normalizedModel), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

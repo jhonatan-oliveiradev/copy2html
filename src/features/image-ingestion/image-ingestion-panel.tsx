@@ -22,6 +22,7 @@ type ImageIngestionPanelProps = {
 type ExtractionResponse = {
   copy?: unknown
   error?: string
+  code?: string
 }
 
 export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPanelProps) {
@@ -30,6 +31,7 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const [extracting, setExtracting] = useState(false)
+  const [extractionError, setExtractionError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!file) {
@@ -51,11 +53,13 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
     }
 
     setFile(candidate)
-    onNotice('Imagem pronta. Revise o preview e clique em Extrair conteúdo.')
+    setExtractionError(null)
+    onNotice('Imagem pronta. Revise o preview e clique em Extrair.')
   }, [onNotice])
 
   function removeFile() {
     setFile(null)
+    setExtractionError(null)
     if (inputRef.current) inputRef.current.value = ''
     onNotice('Imagem removida. Você pode enviar outra captura ou voltar ao editor de texto.')
   }
@@ -64,6 +68,7 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
     if (!file || extracting) return
 
     setExtracting(true)
+    setExtractionError(null)
     onNotice('Analisando texto e formatação visual da imagem…')
 
     try {
@@ -76,7 +81,11 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
       const payload = (await response.json().catch(() => ({}))) as ExtractionResponse
 
       if (!response.ok) {
-        throw new Error(payload.error || 'Não foi possível processar a imagem.')
+        const message = payload.code === 'gemini-not-configured'
+          ? 'Gemini não configurado neste deployment. Faça um novo deploy após adicionar GEMINI_API_KEY na Vercel.'
+          : payload.error || 'Não foi possível processar a imagem.'
+        setExtractionError(message)
+        throw new Error(message)
       }
 
       const parsed = structuredVisualCopySchema.safeParse(payload.copy)
@@ -91,7 +100,9 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
 
       onNotice(`Conteúdo extraído em ${parsed.data.blocks.length} bloco${parsed.data.blocks.length === 1 ? '' : 's'}. Revise o resultado antes de copiar para o Liferay.`)
     } catch (error) {
-      onNotice(error instanceof Error ? error.message : 'Não foi possível extrair o conteúdo da imagem.')
+      const message = error instanceof Error ? error.message : 'Não foi possível extrair o conteúdo da imagem.'
+      setExtractionError((current) => current ?? message)
+      onNotice(message)
     } finally {
       setExtracting(false)
     }
@@ -189,19 +200,25 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
             <div className={styles.analysis}>
               <div>
                 <span className={styles.statusDot} aria-hidden="true" />
-                <strong>{extracting ? 'Extraindo conteúdo…' : 'Pronta para extração visual'}</strong>
+                <strong>{extracting ? 'Extraindo conteúdo…' : extractionError ? 'Extração indisponível' : 'Pronta para extração visual'}</strong>
               </div>
-              <p>
-                O Gemini identifica texto, negritos, itálicos e blocos. O resultado é validado pelo Copy2HTML e sempre volta ao editor para revisão.
-              </p>
-              <small>Ao extrair, esta imagem é enviada à Gemini API para análise.</small>
+              {extractionError ? (
+                <p role="alert">{extractionError}</p>
+              ) : (
+                <>
+                  <p>
+                    O Gemini identifica texto, negritos, itálicos e blocos. O resultado é validado pelo Copy2HTML e sempre volta ao editor para revisão.
+                  </p>
+                  <small>Ao extrair, esta imagem é enviada à Gemini API para análise.</small>
+                </>
+              )}
             </div>
 
             <div className={styles.reviewActions}>
               <Button variant="outline" onClick={() => inputRef.current?.click()} disabled={extracting}>Trocar imagem</Button>
               <Button onClick={() => void extractContent()} disabled={extracting}>
                 {extracting ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
-                {extracting ? 'Extraindo…' : 'Extrair conteúdo'}
+                {extracting ? 'Extraindo…' : 'Extrair'}
               </Button>
             </div>
           </div>

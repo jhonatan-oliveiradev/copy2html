@@ -26,8 +26,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ copy })
   } catch (error) {
     if (error instanceof VisualExtractionError) {
-      const status = error.code === 'configuration' ? 503 : 502
-      return NextResponse.json({ error: error.message }, { status })
+      if (error.code === 'configuration') {
+        return NextResponse.json(
+          {
+            error: 'Gemini não configurado neste deployment. Faça um novo deploy após adicionar GEMINI_API_KEY na Vercel.',
+            code: 'gemini-not-configured',
+          },
+          { status: 503 },
+        )
+      }
+
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: 502 },
+      )
     }
 
     return NextResponse.json(

@@ -1,0 +1,69 @@
+/* Compact header pass to recover vertical workspace area. */
+.app-header {
+  min-height: 64px;
+  padding: 10px clamp(20px, 3vw, 44px);
+}
+
+.brand-row {
+  gap: 8px;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.brand-row h1 {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.version-badge {
+  min-height: 20px;
+  padding: 2px 7px;
+  font-size: 9px;
+}
+
+.app-header > div > p {
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.header-actions {
+  gap: 8px;
+}
+
+.copy-button {
+  min-height: 36px;
+  padding-inline: 15px;
+  font-size: 11.5px;
+}
+
+.flow-hint {
+  min-height: 34px;
+  padding-inline: clamp(20px, 3vw, 44px);
+  font-size: 10.5px;
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    min-height: 60px;
+    padding: 9px 12px;
+  }
+
+  .app-header > div > p {
+    display: none;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-row h1 {
+    font-size: 17px;
+  }
+}

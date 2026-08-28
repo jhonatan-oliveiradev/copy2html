@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { validateImageFile } from '@/core/image-ingestion/validate-image-file'
 import {
+  DEFAULT_GEMINI_MODEL,
   extractVisualCopyWithGemini,
   VisualExtractionError,
 } from '@/core/image-ingestion/gemini-visual-extractor'
@@ -22,8 +23,9 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY ?? ''
-    const copy = await extractVisualCopyWithGemini(file, apiKey)
-    return NextResponse.json({ copy })
+    const model = process.env.GEMINI_VISUAL_MODEL?.trim() || DEFAULT_GEMINI_MODEL
+    const copy = await extractVisualCopyWithGemini(file, apiKey, model)
+    return NextResponse.json({ copy, model })
   } catch (error) {
     if (error instanceof VisualExtractionError) {
       if (error.code === 'configuration') {

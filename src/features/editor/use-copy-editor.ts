@@ -23,20 +23,6 @@ const StyledStrong = Mark.create({
   },
 })
 
-const ColoredText = Mark.create({
-  name: 'coloredText',
-  priority: 950,
-  addAttributes() {
-    return { style: { default: null } }
-  },
-  parseHTML() {
-    return [{ tag: 'span[style]' }]
-  },
-  renderHTML({ HTMLAttributes }) {
-    return ['span', mergeAttributes(HTMLAttributes), 0]
-  },
-})
-
 const SmallMark = Mark.create({
   name: 'smallMark',
   addAttributes() {
@@ -96,7 +82,6 @@ export function useCopyEditor({ onSerializedChange, onNotice }: CopyEditorOption
     extensions: [
       StarterKit.configure({ link: false }),
       StyledStrong,
-      ColoredText,
       SmallMark,
       HtmlBlock,
       StyledLink.configure({ openOnClick: false, autolink: false, linkOnPaste: true }),

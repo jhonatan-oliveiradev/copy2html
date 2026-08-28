@@ -147,5 +147,15 @@ export function useCopyEditor({ onSerializedChange, onNotice }: CopyEditorOption
     [editor],
   )
 
-  return { editor, applyFormattingPreset, applyLinkPreset, insertPreset, insertSnippet }
+  const replaceContent = useCallback(
+    (html: string) => {
+      if (!editor) return false
+      editor.commands.setContent(html, { emitUpdate: true })
+      editor.commands.focus('start')
+      return true
+    },
+    [editor],
+  )
+
+  return { editor, applyFormattingPreset, applyLinkPreset, insertPreset, insertSnippet, replaceContent }
 }

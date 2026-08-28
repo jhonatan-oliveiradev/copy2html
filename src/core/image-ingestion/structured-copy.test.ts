@@ -1,4 +1,5 @@
 import {
+  normalizeStructuredVisualCopy,
   structuredVisualCopySchema,
   structuredVisualCopyToEditorHtml,
   summarizeStructuredVisualCopy,
@@ -45,6 +46,54 @@ describe('structured visual copy', () => {
     })
 
     expect(html).toBe('<p><strong style="color: #663399; display: inline-block;"><em>Clube Smiles</em></strong></p>')
+  })
+
+  it('merges adjacent slices with identical formatting and restores a missing word space', () => {
+    const normalized = normalizeStructuredVisualCopy({
+      blocks: [
+        {
+          segments: [
+            { text: 'vantagens', bold: true, italic: false, color: null },
+            { text: 'exclusivas', bold: true, italic: false, color: null },
+          ],
+        },
+      ],
+    })
+
+    expect(normalized.blocks[0]?.segments).toEqual([
+      { text: 'vantagens exclusivas', bold: true, italic: false, color: null },
+    ])
+  })
+
+  it('restores a missing word space even when formatting changes across a visual wrap', () => {
+    const html = structuredVisualCopyToEditorHtml({
+      blocks: [
+        {
+          segments: [
+            { text: 'vantagens', bold: true, italic: false, color: null },
+            { text: 'exclusivas', bold: false, italic: false, color: null },
+          ],
+        },
+      ],
+    })
+
+    expect(html).toBe('<p><strong>vantagens</strong> exclusivas</p>')
+  })
+
+  it('does not inject spaces before punctuation or symbol boundaries', () => {
+    const html = structuredVisualCopyToEditorHtml({
+      blocks: [
+        {
+          segments: [
+            { text: '30.000', bold: true, italic: false, color: null },
+            { text: '%', bold: true, italic: false, color: null },
+            { text: '.', bold: false, italic: false, color: null },
+          ],
+        },
+      ],
+    })
+
+    expect(html).toBe('<p><strong>30.000%</strong>.</p>')
   })
 
   it('escapes model text instead of trusting it as HTML', () => {

@@ -41,6 +41,7 @@ import type { SerializationResult } from '@/core/serializer/serialize-editor-htm
 import { CopyEditor } from '@/features/editor/copy-editor'
 import { CopyToLiferayButton } from '@/features/html-output/copy-to-liferay-button'
 import { HtmlOutputPanel } from '@/features/html-output/html-output-panel'
+import { ImageIngestionPanel } from '@/features/image-ingestion/image-ingestion-panel'
 import { PresetPanel } from '@/features/presets/preset-panel'
 import { HtmlPreview } from '@/features/preview/html-preview'
 import styles from './copy2html-workspace.module.css'
@@ -57,6 +58,8 @@ type PresetActions = {
   insertPreset: (preset: InsertionPreset) => boolean
   insertSnippet: (preset: SnippetPreset) => boolean
 }
+
+type ContentSource = 'text' | 'image'
 
 function GithubMark() {
   return (
@@ -76,6 +79,7 @@ export function Copy2HtmlWorkspace() {
   const [activePackId, setActivePackId] = useState(defaultPack.id)
   const [activeLibraryId, setActiveLibraryId] = useState(`official:${defaultPack.id}`)
   const [packEnabled, setPackEnabled] = useState(true)
+  const [contentSource, setContentSource] = useState<ContentSource>('text')
   const [customPresets, setCustomPresets] = useState<Preset[]>([])
   const [importedLibraries, setImportedLibraries] = useState<PresetLibrary[]>([])
   const [presetActions, setPresetActions] = useState<PresetActions | null>(null)
@@ -114,6 +118,15 @@ export function Copy2HtmlWorkspace() {
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
+  }, [showNotice])
+
+  const handleContentSourceChange = useCallback((source: ContentSource) => {
+    setContentSource(source)
+    showNotice(
+      source === 'text'
+        ? 'Modo texto ativo. Cole sua copy do Word no editor.'
+        : 'Modo imagem ativo. Envie, arraste ou cole uma captura do Figma.',
+    )
   }, [showNotice])
 
   const handleLibraryChange = useCallback((id: string) => {
@@ -247,7 +260,7 @@ export function Copy2HtmlWorkspace() {
       </header>
 
       <div className="flow-hint" role="status" aria-live="polite">
-        <span>Word</span><b>→</b><span>Copy2HTML</span><b>→</b><span>Liferay</span>
+        <span>Word / Figma</span><b>→</b><span>Copy2HTML</span><b>→</b><span>Liferay</span>
         <p>{notice}</p>
       </div>
 
@@ -259,9 +272,37 @@ export function Copy2HtmlWorkspace() {
                 <span className="eyebrow">1. Conteúdo</span>
                 <h2 id="editor-title">Editor</h2>
               </div>
-              <p>Copie do Word e cole aqui. Negritos e links compatíveis são preservados; resíduos do Word são removidos.</p>
+              <div className="flex max-w-[560px] flex-col items-end gap-3">
+                <p className="m-0 text-right text-xs text-[var(--muted)]">
+                  Use texto para conteúdo copiado do Word ou imagem para preparar uma captura/export do Figma.
+                </p>
+                <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-1" role="group" aria-label="Origem do conteúdo">
+                  <button
+                    type="button"
+                    aria-pressed={contentSource === 'text'}
+                    className={`min-h-8 rounded-md px-3 text-xs font-semibold transition-colors ${contentSource === 'text' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                    onClick={() => handleContentSourceChange('text')}
+                  >
+                    Texto
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={contentSource === 'image'}
+                    className={`min-h-8 rounded-md px-3 text-xs font-semibold transition-colors ${contentSource === 'image' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                    onClick={() => handleContentSourceChange('image')}
+                  >
+                    Imagem
+                  </button>
+                </div>
+              </div>
             </div>
-            <CopyEditor onSerializedChange={updateResult} onNotice={showNotice} registerPresetActions={setPresetActions} />
+
+            <div hidden={contentSource !== 'text'}>
+              <CopyEditor onSerializedChange={updateResult} onNotice={showNotice} registerPresetActions={setPresetActions} />
+            </div>
+            <div hidden={contentSource !== 'image'}>
+              <ImageIngestionPanel onNotice={showNotice} />
+            </div>
           </section>
 
           <aside className={styles.presetRail} aria-label="Presets de formatação">

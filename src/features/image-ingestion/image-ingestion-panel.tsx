@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import {
   structuredVisualCopySchema,
   structuredVisualCopyToEditorHtml,
+  summarizeStructuredVisualCopy,
 } from '@/core/image-ingestion/structured-copy'
 import {
   formatImageFileSize,
@@ -98,7 +99,16 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
         throw new Error('O editor ainda está inicializando. Tente novamente em alguns segundos.')
       }
 
-      onNotice(`Conteúdo extraído em ${parsed.data.blocks.length} bloco${parsed.data.blocks.length === 1 ? '' : 's'}. Revise o resultado antes de copiar para o Liferay.`)
+      const summary = summarizeStructuredVisualCopy(parsed.data)
+      const formatting = [
+        summary.boldSegments ? `${summary.boldSegments} negrito${summary.boldSegments === 1 ? '' : 's'}` : null,
+        summary.italicSegments ? `${summary.italicSegments} itálico${summary.italicSegments === 1 ? '' : 's'}` : null,
+        summary.coloredSegments ? `${summary.coloredSegments} cor${summary.coloredSegments === 1 ? '' : 'es'} Smiles` : null,
+      ].filter(Boolean)
+
+      onNotice(
+        `Extração concluída: ${summary.blocks} bloco${summary.blocks === 1 ? '' : 's'}${formatting.length ? ` · ${formatting.join(' · ')}` : ''}. Revise o resultado antes de copiar para o Liferay.`,
+      )
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível extrair o conteúdo da imagem.'
       setExtractionError((current) => current ?? message)
@@ -207,7 +217,7 @@ export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPan
               ) : (
                 <>
                   <p>
-                    O Gemini identifica texto, negritos, itálicos e blocos. O resultado é validado pelo Copy2HTML e sempre volta ao editor para revisão.
+                    O Gemini identifica texto, negritos, itálicos, blocos e cores conhecidas da paleta Smiles. O resultado é validado pelo Copy2HTML e sempre volta ao editor para revisão.
                   </p>
                   <small>Ao extrair, esta imagem é enviada à Gemini API para análise.</small>
                 </>

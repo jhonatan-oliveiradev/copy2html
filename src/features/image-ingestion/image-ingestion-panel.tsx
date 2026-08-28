@@ -8,6 +8,7 @@ import {
   formatImageFileSize,
   validateImageFile,
 } from '@/core/image-ingestion/validate-image-file'
+import styles from './image-ingestion-panel.module.css'
 
 type ImageIngestionPanelProps = {
   onNotice: (message: string) => void
@@ -49,7 +50,7 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
   }
 
   return (
-    <div className="image-ingestion-shell">
+    <div className={styles.shell}>
       <input
         ref={inputRef}
         type="file"
@@ -60,7 +61,7 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
 
       {!file ? (
         <div
-          className={`image-dropzone${dragging ? ' is-dragging' : ''}`}
+          className={`${styles.dropzone}${dragging ? ` ${styles.dragging}` : ''}`}
           tabIndex={0}
           role="button"
           aria-label="Importar screenshot ou export do Figma"
@@ -93,22 +94,22 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
             }
           }}
         >
-          <div className="image-dropzone-icon" aria-hidden="true">
+          <div className={styles.icon} aria-hidden="true">
             <ImageIcon size={24} strokeWidth={1.7} />
           </div>
-          <div className="image-dropzone-copy">
+          <div className={styles.copy}>
             <strong>Importe uma captura do Figma</strong>
             <p>Arraste uma imagem, clique para escolher ou cole uma screenshot com Ctrl+V.</p>
           </div>
-          <div className="image-dropzone-actions" aria-hidden="true">
+          <div className={styles.actionsHint} aria-hidden="true">
             <span><Upload size={14} /> Selecionar arquivo</span>
             <span><ClipboardPaste size={14} /> Colar screenshot</span>
           </div>
           <small>PNG, JPG ou WebP · até 12 MB · nada é enviado nesta etapa</small>
         </div>
       ) : (
-        <div className="image-review-card">
-          <div className="image-review-preview">
+        <div className={styles.reviewCard}>
+          <div className={styles.preview}>
             {previewUrl ? (
               <Image
                 src={previewUrl}
@@ -120,32 +121,32 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
             ) : null}
           </div>
 
-          <div className="image-review-meta">
-            <div className="image-review-heading">
+          <div className={styles.meta}>
+            <div className={styles.heading}>
               <div>
                 <span className="eyebrow">Imagem selecionada</span>
                 <strong title={file.name}>{file.name}</strong>
               </div>
-              <button type="button" className="image-remove-button" onClick={removeFile} aria-label="Remover imagem">
+              <button type="button" className={styles.remove} onClick={removeFile} aria-label="Remover imagem">
                 <X size={16} />
               </button>
             </div>
 
-            <div className="image-file-details">
+            <div className={styles.fileDetails}>
               <span>{file.type.replace('image/', '').toUpperCase()}</span>
               <span>{formatImageFileSize(file.size)}</span>
               <span>Somente em memória</span>
             </div>
 
-            <div className="image-analysis-state">
+            <div className={styles.analysis}>
               <div>
-                <span className="status-dot" aria-hidden="true" />
+                <span className={styles.statusDot} aria-hidden="true" />
                 <strong>Pronta para extração visual</strong>
               </div>
               <p>Na próxima etapa, o Copy2HTML vai identificar texto, negritos, hierarquia e quebras antes de levar o conteúdo ao editor.</p>
             </div>
 
-            <div className="image-review-actions">
+            <div className={styles.reviewActions}>
               <Button variant="outline" onClick={() => inputRef.current?.click()}>Trocar imagem</Button>
               <Button disabled>Extrair conteúdo</Button>
             </div>

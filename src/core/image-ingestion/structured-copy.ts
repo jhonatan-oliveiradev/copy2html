@@ -37,11 +37,20 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;')
 }
 
+function hasMultipleWords(value: string): boolean {
+  return value.trim().split(/\s+/u).filter(Boolean).length > 1
+}
+
 function renderSegment(segment: VisualTextSegment): string {
   let content = escapeHtml(segment.text)
   if (segment.italic) content = `<em>${content}</em>`
+
+  if (segment.color) {
+    const displayStyle = hasMultipleWords(segment.text) ? ' display: inline-block;' : ''
+    return `<strong style="color: ${segment.color};${displayStyle}">${content}</strong>`
+  }
+
   if (segment.bold) content = `<strong>${content}</strong>`
-  if (segment.color) content = `<span style="color: ${segment.color}">${content}</span>`
   return content
 }
 

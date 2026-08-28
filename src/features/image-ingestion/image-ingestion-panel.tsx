@@ -1,9 +1,13 @@
 'use client'
 
 import Image from 'next/image'
-import { ClipboardPaste, ImageIcon, Upload, X } from 'lucide-react'
+import { ClipboardPaste, ImageIcon, Loader2, Sparkles, Upload, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+  structuredVisualCopySchema,
+  structuredVisualCopyToEditorHtml,
+} from '@/core/image-ingestion/structured-copy'
 import {
   formatImageFileSize,
   validateImageFile,
@@ -12,13 +16,20 @@ import styles from './image-ingestion-panel.module.css'
 
 type ImageIngestionPanelProps = {
   onNotice: (message: string) => void
+  onExtracted: (html: string) => boolean
 }
 
-export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
+type ExtractionResponse = {
+  copy?: unknown
+  error?: string
+}
+
+export function ImageIngestionPanel({ onNotice, onExtracted }: ImageIngestionPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
+  const [extracting, setExtracting] = useState(false)
 
   useEffect(() => {
     if (!file) {
@@ -40,13 +51,50 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
     }
 
     setFile(candidate)
-    onNotice('Imagem pronta para revisão. A extração visual será conectada na próxima etapa.')
+    onNotice('Imagem pronta. Revise o preview e clique em Extrair conteúdo.')
   }, [onNotice])
 
   function removeFile() {
     setFile(null)
     if (inputRef.current) inputRef.current.value = ''
     onNotice('Imagem removida. Você pode enviar outra captura ou voltar ao editor de texto.')
+  }
+
+  async function extractContent() {
+    if (!file || extracting) return
+
+    setExtracting(true)
+    onNotice('Analisando texto e formatação visual da imagem…')
+
+    try {
+      const formData = new FormData()
+      formData.set('image', file)
+      const response = await fetch('/api/extract-visual-copy', {
+        method: 'POST',
+        body: formData,
+      })
+      const payload = (await response.json().catch(() => ({}))) as ExtractionResponse
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Não foi possível processar a imagem.')
+      }
+
+      const parsed = structuredVisualCopySchema.safeParse(payload.copy)
+      if (!parsed.success) {
+        throw new Error('A extração retornou um formato inesperado e foi bloqueada por segurança.')
+      }
+
+      const html = structuredVisualCopyToEditorHtml(parsed.data)
+      if (!onExtracted(html)) {
+        throw new Error('O editor ainda está inicializando. Tente novamente em alguns segundos.')
+      }
+
+      onNotice(`Conteúdo extraído em ${parsed.data.blocks.length} bloco${parsed.data.blocks.length === 1 ? '' : 's'}. Revise o resultado antes de copiar para o Liferay.`)
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : 'Não foi possível extrair o conteúdo da imagem.')
+    } finally {
+      setExtracting(false)
+    }
   }
 
   return (
@@ -105,7 +153,7 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
             <span><Upload size={14} /> Selecionar arquivo</span>
             <span><ClipboardPaste size={14} /> Colar screenshot</span>
           </div>
-          <small>PNG, JPG ou WebP · até 12 MB · nada é enviado nesta etapa</small>
+          <small>PNG, JPG ou WebP · até 12 MB</small>
         </div>
       ) : (
         <div className={styles.reviewCard}>
@@ -127,7 +175,7 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
                 <span className="eyebrow">Imagem selecionada</span>
                 <strong title={file.name}>{file.name}</strong>
               </div>
-              <button type="button" className={styles.remove} onClick={removeFile} aria-label="Remover imagem">
+              <button type="button" className={styles.remove} onClick={removeFile} aria-label="Remover imagem" disabled={extracting}>
                 <X size={16} />
               </button>
             </div>
@@ -135,20 +183,26 @@ export function ImageIngestionPanel({ onNotice }: ImageIngestionPanelProps) {
             <div className={styles.fileDetails}>
               <span>{file.type.replace('image/', '').toUpperCase()}</span>
               <span>{formatImageFileSize(file.size)}</span>
-              <span>Somente em memória</span>
+              <span>Preview local</span>
             </div>
 
             <div className={styles.analysis}>
               <div>
                 <span className={styles.statusDot} aria-hidden="true" />
-                <strong>Pronta para extração visual</strong>
+                <strong>{extracting ? 'Extraindo conteúdo…' : 'Pronta para extração visual'}</strong>
               </div>
-              <p>Na próxima etapa, o Copy2HTML vai identificar texto, negritos, hierarquia e quebras antes de levar o conteúdo ao editor.</p>
+              <p>
+                O Gemini identifica texto, negritos, itálicos e blocos. O resultado é validado pelo Copy2HTML e sempre volta ao editor para revisão.
+              </p>
+              <small>Ao extrair, esta imagem é enviada à Gemini API para análise.</small>
             </div>
 
             <div className={styles.reviewActions}>
-              <Button variant="outline" onClick={() => inputRef.current?.click()}>Trocar imagem</Button>
-              <Button disabled>Extrair conteúdo</Button>
+              <Button variant="outline" onClick={() => inputRef.current?.click()} disabled={extracting}>Trocar imagem</Button>
+              <Button onClick={() => void extractContent()} disabled={extracting}>
+                {extracting ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
+                {extracting ? 'Extraindo…' : 'Extrair conteúdo'}
+              </Button>
             </div>
           </div>
         </div>
